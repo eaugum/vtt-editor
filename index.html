@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VTT Editor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --bg2:      #1a1d27;
+      --bg3:      #252836;
+      --border:   #2e3245;
+      --accent:   #6366f1;
+      --accent-h: #818cf8;
+      --text:     #f0f2f8;
+      --text2:    #8b93b0;
+      --text3:    #525870;
+      --red:      #ef4444;
+      --green:    #10b981;
+      --amber:    #f59e0b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 44px 1fr 165px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    /* ── Toolbar ───────────────────────────────────────── */
+    #toolbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .app-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--accent-h);
+      letter-spacing: -0.3px;
+      margin-right: 6px;
+    }
+    .sep { width: 1px; height: 18px; background: var(--border); }
+    button {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 4px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    button:hover:not(:disabled) { background: #323650; border-color: #404668; }
+    button:disabled { opacity: 0.35; cursor: default; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.primary:hover:not(:disabled) { background: var(--accent-h); border-color: var(--accent-h); }
+    #status-area {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text3);
+    }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text3);
+      flex-shrink: 0;
+    }
+    .dot.saving { background: var(--amber); animation: blink 0.9s infinite; }
+    .dot.saved  { background: var(--green); }
+    .dot.error  { background: var(--red); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+    /* ── Main split ─────────────────────────────────────── */
+    #main {
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ── Left: cue list ─────────────────────────────────── */
+    #left {
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #left-hdr {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #left-hdr .lbl {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      color: var(--text3);
+    }
+    #cue-count { font-size: 11px; color: var(--text3); }
+    #cue-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 7px;
+    }
+    #cue-list::-webkit-scrollbar { width: 5px; }
+    #cue-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 10px;
+      color: var(--text3);
+      font-size: 13px;
+      text-align: center;
+    }
+    .cue-card {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 7px 10px 8px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      position: relative;
+    }
+    .cue-card:hover { background: #1f2335; }
+    .cue-card.active {
+      border-color: var(--accent);
+      background: rgba(99,102,241,0.09);
+    }
+    .cue-card.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 8px;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 2px 2px 0;
+    }
+    .cue-num  { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+    .cue-ts   {
+      font-size: 10.5px; color: var(--text2); margin-bottom: 5px;
+      font-family: 'SF Mono', 'Consolas', monospace;
+    }
+    .cue-ta {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      font-family: inherit;
+      overflow: hidden;
+      display: block;
+    }
+    .cue-card.active .cue-ta { color: #fff; }
+
+    /* ── Right: video ────────────────────────────────────── */
+    #right {
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      overflow: hidden;
+    }
+    #video-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+    #vid { max-width: 100%; max-height: 100%; display: block; }
+    #sub-overlay {
+      position: absolute;
+      bottom: 10%;
+      left: 5%; right: 5%;
+      text-align: center;
+      pointer-events: none;
+    }
+    #sub-text {
+      display: inline-block;
+      background: rgba(0,0,0,0.82);
+      color: #fff;
+      padding: 4px 13px;
+      border-radius: 4px;
+      font-size: 15px;
+      white-space: pre-wrap;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      max-width: 90%;
+    }
+    #vid-controls {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .ctrl-btn {
+      background: transparent;
+      border: none;
+      color: var(--text2);
+      padding: 3px 7px;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .ctrl-btn:hover { background: var(--bg3); color: var(--text); }
+    #time-disp {
+      font-family: 'SF Mono', 'Consolas', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      min-width: 155px;
+    }
+    .fps-wrap { display: flex; align-items: center; gap: 5px; }
+    .fps-wrap span { font-size: 11px; color: var(--text3); }
+    #fps-in {
+      width: 46px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 3px 7px;
+      border-radius: 5px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .kbd-hints {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text3);
+      display: flex;
+      gap: 10px;
+    }
+    kbd {
+      background: var(--bg3);
+      border: 1px solid #3e4460;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 10px;
+      font-family: inherit;
+    }
+
+    /* ── Timeline ───────────────────────────────────────── */
+    #tl-area {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #tl-scroll {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    #tl-scroll::-webkit-scrollbar { height: 4px; }
+    #tl-scroll::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+    #tl-canvas {
+      display: block;
+      cursor: crosshair;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="toolbar">
+  <span class="app-title">VTT Editor</span>
+  <div class="sep"></div>
+  <button id="btn-vid">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+    </svg>Åpne video
+  </button>
+  <button id="btn-vtt">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+    </svg>Åpne VTT
+  </button>
+  <button id="btn-save" class="primary" disabled>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+    </svg>Lagre
+  </button>
+  <div id="status-area">
+    <div class="dot" id="dot"></div>
+    <span id="status-txt">Ingen filer lastet</span>
+  </div>
+</div>
+
+<div id="main">
+  <div id="left">
+    <div id="left-hdr">
+      <span class="lbl">Undertekster</span>
+      <span id="cue-count"></span>
+    </div>
+    <div id="cue-list">
+      <div class="placeholder">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+        </svg>
+        Åpne en VTT-fil
+      </div>
+    </div>
+  </div>
+
+  <div id="right">
+    <div id="video-wrap">
+      <video id="vid" preload="metadata"></video>
+      <div id="sub-overlay"><span id="sub-text"></span></div>
+    </div>
+    <div id="vid-controls">
+      <button class="ctrl-btn" id="btn-prev" title="Forrige bilde (←)">⏮</button>
+      <button class="ctrl-btn" id="btn-play" title="Play / Pause (Space)" style="font-size:17px">▶</button>
+      <button class="ctrl-btn" id="btn-next" title="Neste bilde (→)">⏭</button>
+      <span id="time-disp">00:00:00.000 / 00:00:00.000</span>
+      <div class="sep"></div>
+      <div class="fps-wrap">
+        <span>FPS</span>
+        <input id="fps-in" type="number" value="25" min="1" max="120">
+      </div>
+      <div class="kbd-hints">
+        <span><kbd>Space</kbd> play/pause</span>
+        <span><kbd>←</kbd><kbd>→</kbd> bilde for bilde</span>
+        <span><kbd>⌘S</kbd> lagre</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tl-area">
+  <div id="tl-scroll">
+    <canvas id="tl-canvas"></canvas>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let cues         = [];
+let fileHandle   = null;
+let duration     = 0;
+let activeCueIdx = -1;
+let dragState    = null;  // { idx, mode:'move'|'start'|'end', startX, origStart, origEnd }
+let saveTimer    = null;
+let rafId        = null;
+let briefTimer   = null;  // for audio snippets on frame-step
+
+// Waveform
+let waveformPeaks   = null;   // Float32Array — one amplitude value per ~5ms
+let waveformLoading = false;
+
+const vid    = document.getElementById('vid');
+const canvas = document.getElementById('tl-canvas');
+const ctx    = canvas.getContext('2d');
+
+// Timeline layout (px)
+const PAD = 22;    // left/right padding
+const RH  = 24;    // ruler height
+const TY  = 28;    // cue track top
+const TH  = 44;    // cue track height
+const WGP = 7;     // gap between track and waveform
+const WY  = TY + TH + WGP;  // waveform top  = 79
+const WH  = 34;    // waveform height
+const CH  = WY + WH + 8;    // canvas height = 121
+const EDGE_ZONE = 8;  // px from edge to activate resize cursor
+
+// ═══════════════════════════════════════════════════════
+//  VTT  PARSE / SERIALIZE
+// ═══════════════════════════════════════════════════════
+function parseTs(s) {
+  const p = s.trim().split(':');
+  if (p.length === 3) return +p[0] * 3600 + +p[1] * 60 + parseFloat(p[2]);
+  if (p.length === 2) return +p[0] * 60 + parseFloat(p[1]);
+  return 0;
+}
+function fmtTs(sec) {
+  sec = Math.max(0, sec);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = (sec % 60).toFixed(3).padStart(6, '0');
+  return `${p2(h)}:${p2(m)}:${s}`;
+}
+function fmtShort(sec) {
+  sec = Math.max(0, sec);
+  return `${p2(Math.floor(sec / 60))}:${(sec % 60).toFixed(1).padStart(4,'0')}`;
+}
+function p2(n) { return String(n).padStart(2, '0'); }
+
+function parseVTT(text) {
+  const out = [];
+  let id = 0;
+  for (const block of text.replace(/\r\n/g, '\n').split(/\n{2,}/)) {
+    const lines = block.trim().split('\n');
+    const ci = lines.findIndex(l => l.includes('-->'));
+    if (ci === -1) continue;
+    const arrow = lines[ci];
+    const ai = arrow.indexOf('-->');
+    const start = parseTs(arrow.slice(0, ai));
+    const end   = parseTs(arrow.slice(ai + 3));
+    const text  = lines.slice(ci + 1).join('\n').trim();
+    if (text) out.push({ id: id++, start, end, text });
+  }
+  return out.sort((a, b) => a.start - b.start);
+}
+function serializeVTT(cues) {
+  let s = 'WEBVTT\n';
+  for (const c of cues) s += `\n${fmtTs(c.start)} --> ${fmtTs(c.end)}\n${c.text}\n`;
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILE  I/O
+// ═══════════════════════════════════════════════════════
+document.getElementById('btn-vid').addEventListener('click', async () => {
+  try {
+    const [fh] = await showOpenFilePicker({
+      types: [{ description: 'Video', accept: { 'video/*': ['.mp4','.webm','.mov','.mkv'] } }]
+    });
+    const file = await fh.getFile();
+    vid.src = URL.createObjectURL(file);
+    vid.load();
+    vid.addEventListener('loadedmetadata', () => {
+      duration = vid.duration;
+      updateTimeDisp();
+      drawTimeline();
+    }, { once: true });
+    setStatus(file.name);
+    // Decode waveform in background
+    waveformPeaks = null;
+    waveformLoading = true;
+    drawTimeline();
+    loadWaveform(file);
+  } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+});
+
+document.getElementById('btn-vtt').addEventListener('click', async () => {
+  try {
+    [fileHandle] = await showOpenFilePicker({
+      types: [{ description: 'WebVTT', accept: { 'text/vtt': ['.vtt'] } }]
+    });
+    const file = await fileHandle.getFile();
+    cues = parseVTT(await file.text());
+    activeCueIdx = -1;
+    renderCueList();
+    drawTimeline();
+    document.getElementById('btn-save').disabled = false;
+    document.getElementById('cue-count').textContent = `${cues.length} cues`;
+    setStatus(file.name);
+  } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+});
+
+document.getElementById('btn-save').addEventListener('click', () => saveVTT());
+
+async function saveVTT() {
+  if (!fileHandle) return;
+  setDot('saving');
+  try {
+    const perm = await fileHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') { setDot('error'); return; }
+    const w = await fileHandle.createWritable();
+    await w.write(serializeVTT(cues));
+    await w.close();
+    setDot('saved');
+    setTimeout(() => setDot('idle'), 2500);
+  } catch (e) { console.error(e); setDot('error'); }
+}
+
+function scheduleSave() {
+  setDot('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveVTT, 900);
+}
+
+// ═══════════════════════════════════════════════════════
+//  WAVEFORM  DECODE
+// ═══════════════════════════════════════════════════════
+async function loadWaveform(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+    // Merge channels to mono
+    const numCh = audioBuffer.numberOfChannels;
+    const len   = audioBuffer.length;
+    const mono  = new Float32Array(len);
+    for (let ch = 0; ch < numCh; ch++) {
+      const data = audioBuffer.getChannelData(ch);
+      for (let i = 0; i < len; i++) mono[i] += data[i] / numCh;
+    }
+
+    // Compute peak per ~5ms bin (200 samples/sec) for resolution
+    const sr       = audioBuffer.sampleRate;
+    const binSamples = Math.floor(sr / 200);
+    const numBins  = Math.ceil(len / binSamples);
+    const peaks    = new Float32Array(numBins);
+    for (let b = 0; b < numBins; b++) {
+      let max = 0;
+      const start = b * binSamples;
+      const end   = Math.min(start + binSamples, len);
+      for (let i = start; i < end; i++) {
+        const abs = Math.abs(mono[i]);
+        if (abs > max) max = abs;
+      }
+      peaks[b] = max;
+    }
+
+    waveformPeaks   = peaks;
+    waveformLoading = false;
+    await audioCtx.close();
+    drawTimeline();
+  } catch (e) {
+    console.warn('Waveform decode failed:', e);
+    waveformLoading = false;
+    drawTimeline();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATUS
+// ═══════════════════════════════════════════════════════
+function setStatus(msg) { document.getElementById('status-txt').textContent = msg; }
+function setDot(state) {
+  const d = document.getElementById('dot');
+  d.className = 'dot' + (state && state !== 'idle' ? ` ${state}` : '');
+}
+
+// ═══════════════════════════════════════════════════════
+//  VIDEO  CONTROLS
+// ═══════════════════════════════════════════════════════
+document.getElementById('btn-play').addEventListener('click', togglePlay);
+document.getElementById('btn-prev').addEventListener('click', () => stepFrame(-1));
+document.getElementById('btn-next').addEventListener('click', () => stepFrame(1));
+
+function togglePlay() { vid.paused ? vid.play() : vid.pause(); }
+function getFPS() { return parseFloat(document.getElementById('fps-in').value) || 25; }
+
+function stepFrame(dir) {
+  clearTimeout(briefTimer);
+  vid.pause();
+  vid.currentTime = clamp(vid.currentTime + dir / getFPS(), 0, duration || 0);
+  // Play a ~300 ms snippet for audio context
+  vid.play().catch(() => {});
+  briefTimer = setTimeout(() => { vid.pause(); }, 100);
+}
+
+vid.addEventListener('play',  () => { document.getElementById('btn-play').textContent = '⏸'; startRaf(); });
+vid.addEventListener('pause', () => { document.getElementById('btn-play').textContent = '▶'; cancelAnimationFrame(rafId); tick(); });
+vid.addEventListener('seeked', tick);
+
+function startRaf() { rafId = requestAnimationFrame(() => { tick(); if (!vid.paused) startRaf(); }); }
+
+function tick() {
+  updateTimeDisp();
+  updateSubtitle();
+  updateActiveCue();
+  drawTimeline();
+}
+function updateTimeDisp() {
+  document.getElementById('time-disp').textContent =
+    `${fmtTs(vid.currentTime)} / ${fmtTs(duration)}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SUBTITLE  OVERLAY
+// ═══════════════════════════════════════════════════════
+function updateSubtitle() {
+  const t = vid.currentTime;
+  const c = cues.find(c => t >= c.start && t < c.end);
+  document.getElementById('sub-text').textContent = c ? c.text : '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  CUE  LIST
+// ═══════════════════════════════════════════════════════
+function autoResizeTa(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+function renderCueList() {
+  const container = document.getElementById('cue-list');
+  if (!cues.length) {
+    container.innerHTML = `<div class="placeholder">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      </svg>Ingen cues</div>`;
+    return;
+  }
+  container.innerHTML = '';
+  cues.forEach((cue, i) => {
+    const card = document.createElement('div');
+    card.className = 'cue-card';
+    card.dataset.i = i;
+
+    const num = document.createElement('div');
+    num.className = 'cue-num';
+    num.textContent = `#${i + 1}`;
+
+    const ts = document.createElement('div');
+    ts.className = 'cue-ts';
+    ts.textContent = `${fmtTs(cue.start)} → ${fmtTs(cue.end)}`;
+
+    const ta = document.createElement('textarea');
+    ta.className = 'cue-ta';
+    ta.value = cue.text;
+    // Auto-height: grow to fit content
+    requestAnimationFrame(() => autoResizeTa(ta));
+    ta.addEventListener('input', () => {
+      cue.text = ta.value;
+      autoResizeTa(ta);
+      scheduleSave();
+    });
+    ta.addEventListener('click', e => e.stopPropagation());
+
+    card.addEventListener('click', () => { vid.currentTime = cue.start; });
+    card.append(num, ts, ta);
+    container.appendChild(card);
+  });
+}
+
+function updateActiveCue() {
+  const t = vid.currentTime;
+  const newIdx = cues.findIndex(c => t >= c.start && t < c.end);
+  if (newIdx === activeCueIdx) return;
+  activeCueIdx = newIdx;
+  document.querySelectorAll('.cue-card').forEach((el, i) => {
+    const active = i === newIdx;
+    el.classList.toggle('active', active);
+    if (active) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
+function refreshCueTs(idx) {
+  const card = document.querySelector(`.cue-card[data-i="${idx}"]`);
+  if (card) card.querySelector('.cue-ts').textContent =
+    `${fmtTs(cues[idx].start)} → ${fmtTs(cues[idx].end)}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  TIMELINE  DRAW
+// ═══════════════════════════════════════════════════════
+function canvasW() {
+  return Math.max(900, document.getElementById('tl-scroll').clientWidth);
+}
+function t2x(t) { return PAD + (t / duration) * (canvas.width - PAD * 2); }
+function x2t(x) { return clamp((x - PAD) / (canvas.width - PAD * 2) * duration, 0, duration); }
+
+function drawTimeline() {
+  const W = canvasW();
+  if (canvas.width !== W || canvas.height !== CH) {
+    canvas.width  = W;
+    canvas.height = CH;
+  }
+
+  ctx.clearRect(0, 0, W, CH);
+  ctx.fillStyle = '#0f1117';
+  ctx.fillRect(0, 0, W, CH);
+
+  if (!duration) {
+    ctx.fillStyle = '#2e3245';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Åpne en video for å aktivere tidslinjen', W / 2, CH / 2 + 5);
+    return;
+  }
+
+  // ── Ruler ticks
+  const rawInterval = duration / Math.max(1, Math.floor((W - PAD * 2) / 75));
+  const steps = [0.05,0.1,0.25,0.5,1,2,5,10,15,30,60,120,300,600];
+  const interval = steps.find(s => s >= rawInterval) || 600;
+
+  ctx.font = '9.5px monospace';
+  ctx.textAlign = 'center';
+  for (let t = 0; t <= duration + 0.001; t += interval) {
+    const tt = Math.min(t, duration);
+    const x  = t2x(tt);
+    ctx.strokeStyle = '#1e2540';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, RH); ctx.lineTo(x, CH); ctx.stroke();
+    ctx.fillStyle = '#525870';
+    ctx.fillText(fmtShort(tt), x, RH - 4);
+    if (tt === duration) break;
+  }
+
+  // ── Waveform
+  if (waveformLoading) {
+    ctx.fillStyle = '#252836';
+    ctx.fillRect(PAD, WY, W - PAD * 2, WH);
+    ctx.fillStyle = '#525870';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Laster bølgeform…', W / 2, WY + WH / 2 + 4);
+  } else if (waveformPeaks) {
+    // Background
+    ctx.fillStyle = '#141824';
+    ctx.fillRect(PAD, WY, W - PAD * 2, WH);
+
+    const drawW   = W - PAD * 2;
+    const mid     = WY + WH / 2;
+    const numPeaks = waveformPeaks.length;
+
+    // Draw waveform bars (one per pixel column)
+    for (let px = 0; px < drawW; px++) {
+      const t0 = (px / drawW) * duration;
+      const t1 = ((px + 1) / drawW) * duration;
+      const i0 = Math.floor((t0 / duration) * numPeaks);
+      const i1 = Math.ceil((t1 / duration) * numPeaks);
+
+      // Find max peak in this column
+      let peak = 0;
+      for (let i = i0; i < i1 && i < numPeaks; i++) {
+        if (waveformPeaks[i] > peak) peak = waveformPeaks[i];
+      }
+
+      const barH = Math.max(1, peak * WH * 0.92);
+      const x    = PAD + px;
+
+      // Color: active cue range = accent, rest = muted blue
+      const t = (px / drawW) * duration;
+      const isInActiveCue = activeCueIdx >= 0 &&
+        t >= cues[activeCueIdx]?.start && t < cues[activeCueIdx]?.end;
+
+      ctx.fillStyle = isInActiveCue ? '#6366f1' : '#1e3a5f';
+      ctx.fillRect(x, mid - barH / 2, 1, barH);
+    }
+
+    // Cue range overlays on waveform (tinted)
+    for (const c of cues) {
+      const x1 = t2x(c.start);
+      const x2 = t2x(c.end);
+      ctx.fillStyle = 'rgba(99,102,241,0.12)';
+      ctx.fillRect(x1, WY, x2 - x1, WH);
+    }
+
+    // Waveform border
+    ctx.strokeStyle = '#252836';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(PAD, WY, drawW, WH);
+  } else {
+    // No waveform, no loading — show empty placeholder
+    ctx.fillStyle = '#141824';
+    ctx.fillRect(PAD, WY, W - PAD * 2, WH);
+    ctx.fillStyle = '#2e3245';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Bølgeform lastes når du åpner en videofil', W / 2, WY + WH / 2 + 4);
+  }
+
+  // ── Cue track background
+  ctx.fillStyle = '#13161f';
+  ctx.fillRect(PAD, TY, W - PAD * 2, TH);
+
+  // ── Cue blocks
+  for (let i = 0; i < cues.length; i++) {
+    const c        = cues[i];
+    const x1       = t2x(c.start);
+    const x2       = t2x(c.end);
+    const bw       = Math.max(x2 - x1, 3);
+    const dragging = dragState && dragState.idx === i;
+    const active   = i === activeCueIdx;
+
+    const fill   = dragging ? '#5b21b6' : active ? '#4338ca' : '#1e3a5f';
+    const stroke = dragging ? '#a78bfa' : active ? '#818cf8' : '#2563eb';
+
+    ctx.fillStyle   = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth   = 1.5;
+    rrect(x1, TY, bw, TH, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text + time label
+    if (bw > 20) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x1 + 5, TY + 1, bw - 10, TH - 2); ctx.clip();
+      ctx.fillStyle = active || dragging ? '#c7d2fe' : '#93c5fd';
+      ctx.font = '11px -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(c.text.replace(/\n/g, ' '), x1 + 7, TY + 16);
+      ctx.fillStyle = '#4b6080';
+      ctx.font = '9px monospace';
+      ctx.fillText(fmtShort(c.start), x1 + 6, TY + TH - 7);
+      ctx.restore();
+    }
+
+    // Edge handles (resize grips) — visible if block is wide enough
+    if (bw > 16) {
+      const gripColor = 'rgba(255,255,255,0.35)';
+      ctx.fillStyle = gripColor;
+      const midY = TY + TH / 2;
+      const gripH = 14;
+      // Left grip
+      ctx.fillRect(x1 + 4, midY - gripH / 2, 2, gripH);
+      ctx.fillRect(x1 + 7, midY - gripH / 2, 2, gripH);
+      // Right grip
+      ctx.fillRect(x2 - 6, midY - gripH / 2, 2, gripH);
+      ctx.fillRect(x2 - 9, midY - gripH / 2, 2, gripH);
+    }
+  }
+
+  // ── Playhead
+  const px = t2x(vid.currentTime);
+  ctx.save();
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, CH); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(px - 5, 0); ctx.lineTo(px + 5, 0); ctx.lineTo(px, 9);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function rrect(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════════════════
+//  TIMELINE  HIT  TEST  +  DRAG
+// ═══════════════════════════════════════════════════════
+
+// Returns { idx, mode } where mode = 'move' | 'start' | 'end' | null
+function hitTest(x, y) {
+  if (y >= TY && y <= TY + TH) {
+    for (let i = cues.length - 1; i >= 0; i--) {
+      const x1 = t2x(cues[i].start);
+      const x2 = t2x(cues[i].end);
+      if (x < x1 - 3 || x > x2 + 3) continue;
+      const bw   = x2 - x1;
+      const edge = Math.min(EDGE_ZONE, bw / 3);
+      if (x <= x1 + edge) return { idx: i, mode: 'start' };
+      if (x >= x2 - edge) return { idx: i, mode: 'end' };
+      return { idx: i, mode: 'move' };
+    }
+  }
+  return { idx: -1, mode: null };
+}
+
+function cursorFor(mode) {
+  if (mode === 'move')  return 'grab';
+  if (mode === 'start') return 'w-resize';
+  if (mode === 'end')   return 'e-resize';
+  return 'crosshair';
+}
+
+canvas.addEventListener('mousedown', e => {
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left;
+  const y = e.clientY - r.top;
+  const { idx, mode } = hitTest(x, y);
+  if (idx >= 0) {
+    dragState = { idx, mode, startX: x, origStart: cues[idx].start, origEnd: cues[idx].end };
+    canvas.style.cursor = mode === 'move' ? 'grabbing' : cursorFor(mode);
+  } else if (duration) {
+    vid.currentTime = x2t(x);
+  }
+});
+
+const SNAP_PX = 10;   // px within which a cue edge snaps to a neighbour
+const MIN_DUR = 0.08; // minimum cue duration in seconds
+
+canvas.addEventListener('mousemove', e => {
+  const r  = canvas.getBoundingClientRect();
+  const x  = e.clientX - r.left;
+  const y  = e.clientY - r.top;
+
+  if (dragState) {
+    const idx  = dragState.idx;
+    const c    = cues[idx];
+    const prev = idx > 0             ? cues[idx - 1] : null;
+    const next = idx < cues.length-1 ? cues[idx + 1] : null;
+    const dt   = ((x - dragState.startX) / (canvas.width - PAD * 2)) * duration;
+    const snapT = SNAP_PX * duration / (canvas.width - PAD * 2);
+
+    const ph = vid.currentTime;  // playhead position for snapping
+
+    if (dragState.mode === 'move') {
+      const dur = dragState.origEnd - dragState.origStart;
+      let ns = dragState.origStart + dt;
+      // Collision prevention
+      if (prev) ns = Math.max(ns, prev.end);
+      if (next) ns = Math.min(ns, next.start - dur);
+      ns = clamp(ns, 0, duration - dur);
+      let ne = ns + dur;
+      // Magnetic snap to neighbours
+      if (prev && Math.abs(ns - prev.end) < snapT)    { ns = prev.end;   ne = ns + dur; }
+      if (next && Math.abs(ne - next.start) < snapT)  { ne = next.start; ns = ne - dur; }
+      // Magnetic snap to playhead (start or end, whichever is closer)
+      const dS = Math.abs(ns - ph), dE = Math.abs(ne - ph);
+      if (dS < snapT && dS <= dE) { ns = ph;       ne = ns + dur; }
+      else if (dE < snapT)        { ne = ph;        ns = ne - dur; }
+      c.start = ns;
+      c.end   = ne;
+
+    } else if (dragState.mode === 'start') {
+      let ns = dragState.origStart + dt;
+      // Collision prevention
+      if (prev) ns = Math.max(ns, prev.end);
+      ns = Math.min(ns, c.end - MIN_DUR);
+      ns = clamp(ns, 0, duration);
+      // Snap to prev.end or playhead
+      if (prev && Math.abs(ns - prev.end) < snapT) ns = prev.end;
+      else if (Math.abs(ns - ph) < snapT)          ns = ph;
+      c.start = ns;
+
+    } else if (dragState.mode === 'end') {
+      let ne = dragState.origEnd + dt;
+      // Collision prevention
+      if (next) ne = Math.min(ne, next.start);
+      ne = Math.max(ne, c.start + MIN_DUR);
+      ne = clamp(ne, 0, duration);
+      // Snap to next.start or playhead
+      if (next && Math.abs(ne - next.start) < snapT) ne = next.start;
+      else if (Math.abs(ne - ph) < snapT)            ne = ph;
+      c.end = ne;
+    }
+
+    refreshCueTs(idx);
+    drawTimeline();
+  } else {
+    const { mode } = hitTest(x, y);
+    canvas.style.cursor = cursorFor(mode);
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  if (dragState) { dragState = null; canvas.style.cursor = 'crosshair'; scheduleSave(); }
+});
+canvas.addEventListener('mouseleave', () => {
+  if (dragState) { dragState = null; scheduleSave(); }
+});
+
+// ═══════════════════════════════════════════════════════
+//  SCROLL  TO  SCRUB
+// ═══════════════════════════════════════════════════════
+// Horizontal scroll (trackpad left/right) or vertical (wheel up/down):
+// right/down = forward, left/up = backward.
+document.getElementById('tl-area').addEventListener('wheel', e => {
+  e.preventDefault();
+  if (!duration) return;
+  // Prefer horizontal axis if it dominates, otherwise use vertical
+  const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  // Map pixel delta to time: scale so ~full-width scroll = full duration
+  const dt = (delta / (canvas.width - PAD * 2)) * duration * 0.4;
+  vid.currentTime = clamp(vid.currentTime + dt, 0, duration);
+  tick();
+}, { passive: false });
+
+// ═══════════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const inInput = e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT';
+  if (e.code === 'Space'      && !inInput) { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowLeft'  && !inInput) { e.preventDefault(); stepFrame(-1); }
+  if (e.code === 'ArrowRight' && !inInput) { e.preventDefault(); stepFrame(1); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveVTT(); }
+});
+
+// ═══════════════════════════════════════════════════════
+//  UTILS  +  INIT
+// ═══════════════════════════════════════════════════════
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+window.addEventListener('resize', drawTimeline);
+drawTimeline();
+</script>
+</body>
+</html>
