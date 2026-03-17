@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,7 +28,7 @@
       color: var(--text);
       height: 100vh;
       display: grid;
-      grid-template-rows: 44px 1fr 165px;
+      grid-template-rows: 44px 1fr var(--tl-height, 120px);
       overflow: hidden;
       font-size: 14px;
     }
@@ -73,20 +73,58 @@
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 10px;
       font-size: 12px;
       color: var(--text3);
     }
-    .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--text3);
-      flex-shrink: 0;
+    .status-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .dot.dirty  { background: var(--red); }
-    .dot.saving { background: var(--amber); animation: blink 0.9s infinite; }
-    .dot.saved  { background: var(--green); }
-    .dot.error  { background: var(--red); }
+    .status-file svg {
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+    .status-file { cursor: default; }
+    .status-file > span:last-child {
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+    }
+    .status-file:hover > span:last-child { text-decoration-style: solid; }
+    .status-sep { opacity: 0.5; user-select: none; }
+    #file-info-tooltip {
+      position: fixed;
+      z-index: 1000;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      max-width: 280px;
+      white-space: normal;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.12s, visibility 0.12s;
+    }
+    #file-info-tooltip.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    #file-info-tooltip .file-info-line { display: block; }
+    #btn-save { width: 88px; box-sizing: border-box; }
+    #btn-save:focus { outline: 2px solid var(--accent-h); outline-offset: 2px; }
+    #btn-save:focus:not(:focus-visible) { outline: none; }
+    #btn-save.saved { background: var(--green); border-color: var(--green); color: #fff; }
+    #btn-save.saved:hover:not(:disabled) { background: #0d9668; border-color: #0d9668; }
+    #btn-save.saving { background: var(--amber); border-color: var(--amber); color: #fff; }
+    #btn-save.error { background: var(--red); border-color: var(--red); color: #fff; }
+    #btn-save.error:hover:not(:disabled) { background: #dc2626; border-color: #dc2626; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
     /* ── Drop overlay ──────────────────────────────────── */
@@ -110,15 +148,23 @@
     /* ── Main split ─────────────────────────────────────── */
     #main {
       display: grid;
-      grid-template-columns: 310px 1fr;
+      grid-template-columns: var(--left-width, 310px) 6px 1fr;
       overflow: hidden;
       min-height: 0;
     }
 
+    #main-resizer {
+      background: var(--border);
+      cursor: col-resize;
+      flex-shrink: 0;
+    }
+    #main-resizer:hover { background: var(--accent); }
+    #main-resizer:active { background: var(--accent); }
+
     /* ── Left: cue list ─────────────────────────────────── */
     #left {
       background: var(--bg2);
-      border-right: 1px solid var(--border);
+      border-right: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -156,6 +202,7 @@
       color: var(--text3);
       font-size: 13px;
       text-align: center;
+      cursor: pointer;
     }
     .cue-card {
       border: 1px solid var(--border);
@@ -184,6 +231,12 @@
       font-size: 10.5px; color: var(--text2); margin-bottom: 5px;
       font-family: 'SF Mono', 'Consolas', monospace;
     }
+    .cue-ts .cue-ts-part {
+      cursor: pointer;
+      padding: 1px 2px;
+      border-radius: 3px;
+    }
+    .cue-ts .cue-ts-part:hover { background: var(--bg3); color: var(--text); }
     .cue-ta {
       width: 100%;
       background: transparent;
@@ -283,24 +336,38 @@
       line-height: 1;
     }
     .ctrl-btn:hover { background: var(--bg3); color: var(--text); }
+    #btn-play {
+      width: 32px;
+      min-width: 32px;
+      padding-left: 0;
+      padding-right: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
     #time-disp {
       font-family: 'SF Mono', 'Consolas', monospace;
       font-size: 12px;
       color: var(--text2);
       min-width: 155px;
+      margin-right: 8px;
     }
-    .fps-wrap { display: flex; align-items: center; gap: 5px; }
-    .fps-wrap span { font-size: 11px; color: var(--text3); }
-    #fps-in {
-      width: 46px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 3px 7px;
-      border-radius: 5px;
+    #time-current {
+      cursor: pointer;
+      padding: 2px 3px;
+      border-radius: 3px;
+    }
+    #time-current:hover { background: var(--bg3); color: var(--text); }
+    .font-scale-disp {
       font-size: 12px;
+      color: var(--text2);
+      min-width: 2.5em;
       text-align: center;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
     }
+    .font-scale-disp:hover { background: var(--bg3); color: var(--text); }
     .kbd-hints {
       margin-left: auto;
       font-size: 11px;
@@ -324,7 +391,27 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      min-height: 0;
     }
+    #tl-area.tl-area-no-video { cursor: pointer; }
+    #tl-area.tl-area-no-video #tl-canvas { cursor: pointer !important; }
+    #tl-resizer {
+      height: 6px;
+      background: var(--border);
+      cursor: ns-resize;
+      flex-shrink: 0;
+    }
+    #tl-resizer:hover { background: var(--accent); }
+    .tl-zoom-disp {
+      font-size: 12px;
+      color: var(--text2);
+      min-width: 2.2em;
+      text-align: center;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .tl-zoom-disp:hover { background: var(--bg3); color: var(--text); }
     #tl-scroll {
       flex: 1;
       overflow-x: auto;
@@ -337,11 +424,82 @@
       cursor: crosshair;
       user-select: none;
     }
+
+    /* Welcome modal */
+    #welcome-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+      padding: 20px;
+    }
+    #welcome-modal.hidden { display: none; }
+    #welcome-modal .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 440px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    #welcome-modal .modal-box h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent-h);
+      margin: 0 0 12px 0;
+      padding-right: 36px;
+    }
+    #welcome-modal .modal-box p {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text2);
+      margin: 0 0 10px 0;
+    }
+    #welcome-modal .modal-box p:last-child { margin-bottom: 0; }
+    #welcome-modal .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: var(--bg3);
+      color: var(--text2);
+      border-radius: 6px;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    #welcome-modal .modal-close:hover { background: #323650; color: var(--text); }
+    #welcome-modal .modal-body { padding: 24px; }
   </style>
 </head>
 <body>
 
-<div id="drop-overlay">Slipp video eller VTT-fil her</div>
+<div id="welcome-modal">
+  <div class="modal-box" id="welcome-modal-box">
+    <button type="button" class="modal-close" id="welcome-modal-close" aria-label="Close">×</button>
+    <div class="modal-body">
+      <h2>Welcome to VTT Editor</h2>
+      <p>This tool lets you edit WebVTT subtitle files in sync with a video.</p>
+      <p><strong>Get started:</strong> Open a video file and a VTT file using the toolbar buttons, or drag and drop them onto the page. You can also click the empty side panel to open a VTT file, or the timeline bar at the bottom to open a video.</p>
+      <p><strong>Editing:</strong> Click a cue in the list to jump to it. Edit text in place. Adjust start and end times by clicking the timecodes in the list, or drag the cue blocks on the timeline. Use the zoom controls to work precisely on long videos.</p>
+      <p><strong>Shortcuts:</strong> <kbd>Space</kbd> or <kbd>S</kbd> play/pause. <kbd>A</kbd>/<kbd>D</kbd> or arrow keys step frame by frame. <kbd>⌘S</kbd> saves.</p>
+    </div>
+  </div>
+</div>
+
+<div id="drop-overlay">Drop video or VTT file here</div>
 
 <div id="toolbar">
   <span class="app-title">VTT Editor</span>
@@ -349,31 +507,31 @@
   <button id="btn-vid">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-    </svg>Åpne video
+    </svg>Open video
   </button>
   <button id="btn-vtt">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
       <polyline points="14 2 14 8 20 8"/>
       <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-    </svg>Åpne VTT
+    </svg>Open VTT
   </button>
-  <button id="btn-save" class="primary" disabled>
+  <button id="btn-save" class="primary" disabled title="Save VTT (⌘S)">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
       <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-    </svg>Lagre
+    </svg><span id="btn-save-label">Lagre</span>
   </button>
   <div id="status-area">
-    <div class="dot" id="dot"></div>
-    <span id="status-txt">Ingen filer lastet</span>
+    <span id="status-txt">No files loaded</span>
   </div>
 </div>
+<div id="file-info-tooltip" aria-hidden="true"></div>
 
 <div id="main">
   <div id="left">
     <div id="left-hdr">
-      <span class="lbl">Undertekster</span>
+      <span class="lbl">Subtitles</span>
       <span id="cue-count"></span>
     </div>
     <div id="cue-list">
@@ -383,39 +541,42 @@
           <polyline points="14 2 14 8 20 8"/>
           <line x1="16" y1="13" x2="8" y2="13"/>
         </svg>
-        Åpne en VTT-fil
+        Open a VTT file
       </div>
     </div>
   </div>
-
+  <div id="main-resizer" title="Drag to resize panel"></div>
   <div id="right">
     <div id="video-wrap">
       <video id="vid" preload="metadata"></video>
       <div id="sub-overlay"><span id="sub-text"></span></div>
     </div>
     <div id="vid-controls">
-      <button class="ctrl-btn" id="btn-prev" title="Forrige bilde (←)">⏮</button>
-      <button class="ctrl-btn" id="btn-play" title="Play / Pause (Space)" style="font-size:17px">▶</button>
-      <button class="ctrl-btn" id="btn-next" title="Neste bilde (→)">⏭</button>
-      <span id="time-disp">00:00:00.000 / 00:00:00.000</span>
+      <button class="ctrl-btn" id="btn-prev" title="Previous frame (←)">⏮</button>
+      <button class="ctrl-btn" id="btn-play" title="Play / Pause (Space / S)" style="font-size:17px">▶</button>
+      <button class="ctrl-btn" id="btn-next" title="Next frame (→)">⏭</button>
       <div class="sep"></div>
-      <div class="fps-wrap">
-        <span>FPS</span>
-        <input id="fps-in" type="number" value="25" min="1" max="120">
-      </div>
+      <span id="time-disp"><span id="time-current" title="Click to go to time">00:00:00.000</span><span class="time-sep"> / </span><span id="time-duration">00:00:00.000</span></span>
       <div class="sep"></div>
-      <button class="ctrl-btn" id="btn-font-down" title="Mindre undertekst" style="font-size:12px;font-weight:600">A−</button>
-      <button class="ctrl-btn" id="btn-font-up"   title="Større undertekst" style="font-size:12px;font-weight:600">A+</button>
+      <button class="ctrl-btn" id="btn-font-down" title="Smaller subtitle" style="font-size:12px;font-weight:600">A−</button>
+      <span id="font-scale-disp" class="font-scale-disp" title="Click for 50%">50%</span>
+      <button class="ctrl-btn" id="btn-font-up"   title="Larger subtitle" style="font-size:12px;font-weight:600">A+</button>
+      <div class="sep"></div>
+      <button class="ctrl-btn" id="tl-zoom-out" title="Timeline zoom out" disabled>−</button>
+      <span id="tl-zoom-label" class="tl-zoom-disp" title="Click for 1×">1×</span>
+      <button class="ctrl-btn" id="tl-zoom-in" title="Timeline zoom in">+</button>
+      <div class="sep"></div>
       <div class="kbd-hints">
-        <span><kbd>Space</kbd> play/pause</span>
-        <span><kbd>←</kbd><kbd>→</kbd> bilde for bilde</span>
-        <span><kbd>⌘S</kbd> lagre</span>
+        <span><kbd>Space</kbd>/<kbd>S</kbd> play/pause</span>
+        <span><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> frame by frame</span>
+        <span><kbd>⌘S</kbd> save</span>
       </div>
     </div>
   </div>
 </div>
 
-<div id="tl-area">
+<div id="tl-area" class="tl-area-no-video">
+  <div id="tl-resizer" title="Drag to resize timeline"></div>
   <div id="tl-scroll">
     <canvas id="tl-canvas"></canvas>
   </div>
@@ -423,18 +584,48 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
+//  WELCOME  MODAL
+// ═══════════════════════════════════════════════════════
+(function () {
+  const modal = document.getElementById('welcome-modal');
+  const box = document.getElementById('welcome-modal-box');
+  const closeBtn = document.getElementById('welcome-modal-close');
+
+  function closeWelcome() {
+    modal.classList.add('hidden');
+  }
+
+  closeBtn.addEventListener('click', closeWelcome);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeWelcome();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeWelcome();
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════
 let cues              = [];
 let fileHandle        = null;
 let fileHandleFromPicker = false;  // true = opened via showOpenFilePicker (write-safe)
+let videoFileName    = null;
+let vttFileName      = null;
+let videoFileSize    = null;
+let videoWidth       = null;
+let videoHeight      = null;
+let vttFileSize      = null;
 let duration     = 0;
 let activeCueIdx = -1;
 let dragState    = null;   // { idx, mode, startX, origStart, origEnd }
 let rafId        = null;
 let briefTimer   = null;
 let saveTimer    = null;
-let subFontScale = 1.0;
+const FONT_SCALE_MIN = 0.01;
+const FONT_SCALE_MAX = 1.0;
+const FONT_SCALE_DEFAULT = 0.5;
+let subFontScale = FONT_SCALE_DEFAULT;
 
 let waveformPeaks   = null;
 let waveformLoading = false;
@@ -443,18 +634,78 @@ const vid    = document.getElementById('vid');
 const canvas = document.getElementById('tl-canvas');
 const ctx    = canvas.getContext('2d');
 
-// Timeline geometry
+const LEFT_PANEL_MIN = 310;
+const LEFT_PANEL_MAX_FRAC = 0.5;
+let leftPanelWidth = 310;
+let mainResizeStartX = 0;
+let mainResizeStartW = 0;
+
+function initMainResizer() {
+  const main = document.getElementById('main');
+  const resizer = document.getElementById('main-resizer');
+  main.style.setProperty('--left-width', leftPanelWidth + 'px');
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    mainResizeStartX = e.clientX;
+    mainResizeStartW = leftPanelWidth;
+    const onMove = (e2) => {
+      const maxW = window.innerWidth * LEFT_PANEL_MAX_FRAC;
+      leftPanelWidth = Math.round(clamp(mainResizeStartW + (e2.clientX - mainResizeStartX), LEFT_PANEL_MIN, maxW));
+      main.style.setProperty('--left-width', leftPanelWidth + 'px');
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+initMainResizer();
+
+const TL_HEIGHT_MIN = 120;
+const TL_HEIGHT_MAX_FRAC = 0.4;
+let tlHeight = 120;
+
+function initTlResizer() {
+  const resizer = document.getElementById('tl-resizer');
+  document.body.style.setProperty('--tl-height', tlHeight + 'px');
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = tlHeight;
+    const onMove = (e2) => {
+      const maxH = Math.max(TL_HEIGHT_MIN, window.innerHeight * TL_HEIGHT_MAX_FRAC);
+      tlHeight = Math.round(clamp(startH - (e2.clientY - startY), TL_HEIGHT_MIN, maxH));
+      document.body.style.setProperty('--tl-height', tlHeight + 'px');
+      drawTimeline();
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+initTlResizer();
+
+// Timeline geometry (compact so more space for video); layout scaled in drawTimeline
 const PAD       = 22;
-const RH        = 24;
-const TY        = 28;
-const TH        = 44;
-const WGP       = 7;
-const WY        = TY + TH + WGP;
-const WH        = 34;
-const CH        = WY + WH + 8;
+const BASE_CH   = 97;
+const BASE_RH   = 20;
+const BASE_TY   = 22;
+const BASE_TH   = 36;
+const BASE_WGP  = 5;
+const BASE_WH   = 28;
+let timelineLayout = { CH: BASE_CH, RH: BASE_RH, TY: BASE_TY, TH: BASE_TH, WY: BASE_TY + BASE_TH + BASE_WGP, WH: BASE_WH, scale: 1 };
 const EDGE_ZONE = 8;
 const SNAP_PX   = 10;
 const MIN_DUR   = 0.08;
+const TL_ZOOM_MIN = 1;
+const TL_ZOOM_MAX = 100;
+let tlZoom   = 1;
+let tlScrollT = 0;
 
 // ═══════════════════════════════════════════════════════
 //  VTT  PARSE / SERIALIZE
@@ -504,15 +755,31 @@ function serializeVTT(cues) {
 //  LOAD  HELPERS  (shared by buttons + drag & drop)
 // ═══════════════════════════════════════════════════════
 async function loadVideoFile(file) {
+  videoWidth = null;
+  videoHeight = null;
   vid.src = URL.createObjectURL(file);
   vid.load();
   vid.addEventListener('loadedmetadata', () => {
     duration = vid.duration;
+    videoFPS = 25;
+    videoWidth = vid.videoWidth;
+    videoHeight = vid.videoHeight;
+    tlZoom = 1;
+    tlScrollT = 0;
+    const zoomEl = document.getElementById('tl-zoom-label');
+    if (zoomEl) zoomEl.textContent = '1×';
+    const zo = document.getElementById('tl-zoom-out');
+    const zi = document.getElementById('tl-zoom-in');
+    if (zo) zo.disabled = true;
+    if (zi) zi.disabled = false;
     updateTimeDisp();
     updateSubtitleSize();
     drawTimeline();
   }, { once: true });
-  setStatus(file.name);
+  videoFileName = file.name;
+  videoFileSize = file.size;
+  document.getElementById('tl-area').classList.remove('tl-area-no-video');
+  updateStatusDisplay();
   waveformPeaks = null;
   waveformLoading = true;
   drawTimeline();
@@ -528,32 +795,46 @@ async function loadVTTFile(file, handle = null, fromPicker = false) {
   drawTimeline();
   document.getElementById('btn-save').disabled = false;
   document.getElementById('cue-count').textContent = `${cues.length} cues`;
-  setStatus(file.name);
+  setDot('saved');
+  vttFileName = file.name;
+  vttFileSize = file.size;
+  updateStatusDisplay();
 }
 
 // ═══════════════════════════════════════════════════════
 //  FILE  I/O  (buttons)
 // ═══════════════════════════════════════════════════════
-document.getElementById('btn-vid').addEventListener('click', async () => {
+document.getElementById('btn-vid').addEventListener('click', openVideoFilePicker);
+
+document.getElementById('btn-vtt').addEventListener('click', openVTTFilePicker);
+document.getElementById('btn-save').addEventListener('click', () => saveVTT());
+
+async function openVTTFilePicker() {
+  try {
+    const [fh] = await showOpenFilePicker({
+      types: [{ description: 'WebVTT', accept: { 'text/vtt': ['.vtt'] } }]
+    });
+    await loadVTTFile(await fh.getFile(), fh, true);
+    saveVTT();
+  } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+}
+
+async function openVideoFilePicker() {
   try {
     const [fh] = await showOpenFilePicker({
       types: [{ description: 'Video', accept: { 'video/*': ['.mp4','.webm','.mov','.mkv'] } }]
     });
     await loadVideoFile(await fh.getFile());
   } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+}
+
+document.getElementById('cue-list').addEventListener('click', () => {
+  if (cues.length === 0) openVTTFilePicker();
 });
 
-document.getElementById('btn-vtt').addEventListener('click', async () => {
-  try {
-    const [fh] = await showOpenFilePicker({
-      types: [{ description: 'WebVTT', accept: { 'text/vtt': ['.vtt'] } }]
-    });
-    await loadVTTFile(await fh.getFile(), fh, true);  // fromPicker = true
-    saveVTT();  // prompt for write permission immediately
-  } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+document.getElementById('tl-area').addEventListener('click', (e) => {
+  if (!videoFileName) openVideoFilePicker();
 });
-
-document.getElementById('btn-save').addEventListener('click', () => saveVTT());
 
 async function saveVTT() {
   if (fileHandleFromPicker && fileHandle) {
@@ -575,7 +856,7 @@ async function saveVTT() {
     // startIn points to the same directory when possible
     const origName = fileHandle
       ? await fileHandle.getFile().then(f => f.name).catch(() => 'undertekster.vtt')
-      : 'undertekster.vtt';
+      : 'subtitles.vtt';
     const opts = {
       suggestedName: origName,
       types: [{ description: 'WebVTT', accept: { 'text/vtt': ['.vtt'] } }],
@@ -702,10 +983,89 @@ async function loadWaveform(file) {
 // ═══════════════════════════════════════════════════════
 //  STATUS
 // ═══════════════════════════════════════════════════════
-function setStatus(msg) { document.getElementById('status-txt').textContent = msg; }
+const videoIconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>';
+const vttIconSvg   = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatFileSize(bytes) {
+  if (bytes == null || bytes === 0) return null;
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function getVideoTooltip() {
+  const lines = [];
+  if (videoFileSize != null) lines.push('Size: ' + formatFileSize(videoFileSize));
+  if (duration > 0) lines.push('Duration: ' + fmtTs(duration));
+  if (videoWidth != null && videoHeight != null && videoWidth > 0) lines.push('Resolution: ' + videoWidth + '×' + videoHeight);
+  if (videoFPS != null && videoFPS > 0) lines.push('Frame rate: ' + videoFPS + ' fps');
+  return lines.length ? lines.join('\n') : null;
+}
+
+function getVTTTooltip() {
+  const lines = [];
+  if (vttFileSize != null) lines.push('Size: ' + formatFileSize(vttFileSize));
+  if (cues.length > 0) {
+    lines.push('Cue count: ' + cues.length);
+    const start = Math.min(...cues.map(c => c.start));
+    const end = Math.max(...cues.map(c => c.end));
+    lines.push('Time span: ' + fmtTs(start) + ' – ' + fmtTs(end));
+  }
+  return lines.length ? lines.join('\n') : null;
+}
+
+function updateStatusDisplay() {
+  const el = document.getElementById('status-txt');
+  if (!videoFileName && !vttFileName) {
+    el.textContent = 'No files loaded';
+    return;
+  }
+  const parts = [];
+  if (videoFileName) {
+    parts.push(`<span class="status-file" data-type="video">${videoIconSvg}<span>${escapeHtml(videoFileName)}</span></span>`);
+  }
+  if (vttFileName) {
+    parts.push(`<span class="status-file" data-type="vtt">${vttIconSvg}<span>${escapeHtml(vttFileName)}</span></span>`);
+  }
+  el.innerHTML = parts.join('<span class="status-sep"> · </span>');
+}
+
+let fileInfoTooltipHideTimer = null;
+document.getElementById('status-area').addEventListener('mouseenter', e => {
+  const fileSpan = e.target.closest('.status-file');
+  if (!fileSpan) return;
+  clearTimeout(fileInfoTooltipHideTimer);
+  const type = fileSpan.dataset.type;
+  const raw = type === 'video' ? getVideoTooltip() : getVTTTooltip();
+  const tipEl = document.getElementById('file-info-tooltip');
+  if (!raw) { tipEl.classList.remove('visible'); return; }
+  tipEl.innerHTML = raw.split('\n').map(line => '<span class="file-info-line">' + escapeHtml(line) + '</span>').join('');
+  const rect = fileSpan.getBoundingClientRect();
+  let left = rect.left;
+  const top = rect.bottom + 6;
+  const maxLeft = window.innerWidth - 290;
+  if (left > maxLeft) left = maxLeft;
+  if (left < 10) left = 10;
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = top + 'px';
+  tipEl.classList.add('visible');
+}, true);
+document.getElementById('status-area').addEventListener('mouseleave', e => {
+  if (e.relatedTarget && document.getElementById('file-info-tooltip').contains(e.relatedTarget)) return;
+  fileInfoTooltipHideTimer = setTimeout(() => {
+    document.getElementById('file-info-tooltip').classList.remove('visible');
+  }, 150);
+}, true);
 function setDot(state) {
-  const d = document.getElementById('dot');
-  d.className = 'dot' + (state && state !== 'idle' ? ` ${state}` : '');
+  const btn = document.getElementById('btn-save');
+  const label = document.getElementById('btn-save-label');
+  btn.classList.remove('dirty', 'saving', 'saved', 'error');
+  if (state && state !== 'idle') btn.classList.add(state);
+  label.textContent = state === 'saving' ? 'Saving' : state === 'saved' ? 'Saved' : 'Save';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -715,16 +1075,35 @@ document.getElementById('btn-play').addEventListener('click', togglePlay);
 document.getElementById('btn-prev').addEventListener('click', () => stepFrame(-1));
 document.getElementById('btn-next').addEventListener('click', () => stepFrame(1));
 document.getElementById('btn-font-up').addEventListener('click', () => {
-  subFontScale = clamp(subFontScale + 0.1, 0.3, 3.0);
+  subFontScale = clamp(subFontScale + 0.05, FONT_SCALE_MIN, FONT_SCALE_MAX);
   updateSubtitleSize();
 });
 document.getElementById('btn-font-down').addEventListener('click', () => {
-  subFontScale = clamp(subFontScale - 0.1, 0.3, 3.0);
+  subFontScale = clamp(subFontScale - 0.05, FONT_SCALE_MIN, FONT_SCALE_MAX);
+  updateSubtitleSize();
+});
+document.getElementById('font-scale-disp').addEventListener('click', () => {
+  subFontScale = FONT_SCALE_DEFAULT;
   updateSubtitleSize();
 });
 
 function togglePlay() { vid.paused ? vid.play() : vid.pause(); }
-function getFPS() { return parseFloat(document.getElementById('fps-in').value) || 25; }
+
+let videoFPS = 25;
+function getFPS() { return videoFPS; }
+function measureVideoFPS() {
+  if (typeof vid.requestVideoFrameCallback !== 'function') return;
+  let lastMediaTime = null;
+  const onFrame = (now, metadata) => {
+    if (lastMediaTime !== null && metadata.mediaTime !== lastMediaTime) {
+      const delta = metadata.mediaTime - lastMediaTime;
+      if (delta > 0) videoFPS = Math.round(1 / delta);
+    }
+    lastMediaTime = metadata.mediaTime;
+    if (!vid.paused) vid.requestVideoFrameCallback(onFrame);
+  };
+  vid.requestVideoFrameCallback(onFrame);
+}
 
 function stepFrame(dir) {
   clearTimeout(briefTimer);
@@ -734,7 +1113,11 @@ function stepFrame(dir) {
   briefTimer = setTimeout(() => vid.pause(), 100);
 }
 
-vid.addEventListener('play',  () => { document.getElementById('btn-play').textContent = '⏸'; startRaf(); });
+vid.addEventListener('play',  () => {
+  document.getElementById('btn-play').textContent = '⏸';
+  measureVideoFPS();
+  startRaf();
+});
 vid.addEventListener('pause', () => { document.getElementById('btn-play').textContent = '▶'; cancelAnimationFrame(rafId); tick(); });
 vid.addEventListener('seeked', tick);
 
@@ -747,9 +1130,21 @@ function tick() {
   drawTimeline();
 }
 function updateTimeDisp() {
-  document.getElementById('time-disp').textContent =
-    `${fmtTs(vid.currentTime)} / ${fmtTs(duration)}`;
+  document.getElementById('time-current').textContent = fmtTs(vid.currentTime);
+  document.getElementById('time-duration').textContent = fmtTs(duration);
 }
+
+document.getElementById('time-current').addEventListener('click', () => {
+  if (duration <= 0) return;
+  const raw = prompt('Go to time (HH:MM:SS.mmm or MM:SS.mmm):', fmtTs(vid.currentTime));
+  if (raw == null || raw.trim() === '') return;
+  const val = parseTs(raw.trim());
+  if (!isNaN(val) && val >= 0) {
+    vid.currentTime = clamp(val, 0, duration);
+    centerViewOnPlayhead();
+    tick();
+  }
+});
 
 // ═══════════════════════════════════════════════════════
 //  SUBTITLE  OVERLAY  +  SIZE
@@ -761,9 +1156,9 @@ function updateSubtitle() {
 }
 
 function updateSubtitleSize() {
+  document.getElementById('font-scale-disp').textContent = Math.round(subFontScale * 100) + '%';
   const h = vid.clientHeight;
   if (!h) return;
-  // Base size proportional to video height, multiplied by manual scale
   const base = Math.max(11, Math.round(h * 0.042));
   const size = Math.max(8, Math.round(base * subFontScale));
   document.getElementById('sub-text').style.fontSize = size + 'px';
@@ -773,7 +1168,7 @@ function updateSubtitleSize() {
 document.getElementById('video-wrap').addEventListener('wheel', e => {
   e.preventDefault();
   const dir = e.deltaY < 0 ? 1 : -1;
-  subFontScale = clamp(subFontScale + dir * 0.1, 0.3, 3.0);
+  subFontScale = clamp(subFontScale + dir * 0.01, FONT_SCALE_MIN, FONT_SCALE_MAX);
   updateSubtitleSize();
 }, { passive: false });
 
@@ -794,7 +1189,7 @@ function renderCueList() {
     container.innerHTML = `<div class="placeholder">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      </svg>Ingen cues</div>`;
+      </svg>No cues</div>`;
     return;
   }
   container.innerHTML = '';
@@ -809,7 +1204,21 @@ function renderCueList() {
 
     const ts = document.createElement('div');
     ts.className = 'cue-ts';
-    ts.textContent = `${fmtTs(cue.start)} → ${fmtTs(cue.end)}`;
+    const startSpan = document.createElement('span');
+    startSpan.className = 'cue-ts-part';
+    startSpan.textContent = fmtTs(cue.start);
+    startSpan.title = 'Click to set start time';
+    startSpan.dataset.i = i;
+    startSpan.dataset.part = 'start';
+    const endSpan = document.createElement('span');
+    endSpan.className = 'cue-ts-part';
+    endSpan.textContent = fmtTs(cue.end);
+    endSpan.title = 'Click to set end time';
+    endSpan.dataset.i = i;
+    endSpan.dataset.part = 'end';
+    ts.appendChild(startSpan);
+    ts.appendChild(document.createTextNode(' → '));
+    ts.appendChild(endSpan);
 
     const ta = document.createElement('textarea');
     ta.className = 'cue-ta';
@@ -830,7 +1239,7 @@ function renderCueList() {
     dupBtn.className = 'cue-btn';
     dupBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </svg> Dupliser`;
+    </svg> Duplicate`;
     dupBtn.addEventListener('click', e => { e.stopPropagation(); duplicateCue(i); });
 
     const delBtn = document.createElement('button');
@@ -838,11 +1247,13 @@ function renderCueList() {
     delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
       <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
-    </svg> Slett`;
+    </svg> Delete`;
     delBtn.addEventListener('click', e => { e.stopPropagation(); deleteCue(i); });
 
     actions.append(dupBtn, delBtn);
 
+    startSpan.addEventListener('click', e => { e.stopPropagation(); setCueTime(i, 'start'); });
+    endSpan.addEventListener('click', e => { e.stopPropagation(); setCueTime(i, 'end'); });
     card.addEventListener('click', () => { vid.currentTime = cue.start; });
     card.append(num, ts, ta, actions);
     container.appendChild(card);
@@ -883,10 +1294,32 @@ function updateActiveCue() {
   });
 }
 
+function setCueTime(idx, part) {
+  const cue = cues[idx];
+  const current = part === 'start' ? cue.start : cue.end;
+  const raw = prompt(part === 'start' ? 'Start time (HH:MM:SS.mmm or MM:SS.mmm):' : 'End time (HH:MM:SS.mmm or MM:SS.mmm):', fmtTs(current));
+  if (raw == null || raw.trim() === '') return;
+  const val = parseTs(raw.trim());
+  if (isNaN(val) || val < 0) return;
+  const maxT = duration > 0 ? duration : Infinity;
+  if (part === 'start') {
+    cue.start = clamp(val, 0, Math.min(cue.end - MIN_DUR, maxT));
+  } else {
+    cue.end = clamp(val, cue.start + MIN_DUR, maxT);
+  }
+  refreshCueTs(idx);
+  scheduleSave();
+  drawTimeline();
+}
+
 function refreshCueTs(idx) {
   const card = document.querySelector(`.cue-card[data-i="${idx}"]`);
-  if (card) card.querySelector('.cue-ts').textContent =
-    `${fmtTs(cues[idx].start)} → ${fmtTs(cues[idx].end)}`;
+  if (!card) return;
+  const parts = card.querySelectorAll('.cue-ts-part');
+  if (parts.length >= 2) {
+    parts[0].textContent = fmtTs(cues[idx].start);
+    parts[1].textContent = fmtTs(cues[idx].end);
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -895,69 +1328,103 @@ function refreshCueTs(idx) {
 function canvasW() {
   return Math.max(900, document.getElementById('tl-scroll').clientWidth);
 }
-function t2x(t) { return PAD + (t / duration) * (canvas.width - PAD * 2); }
-function x2t(x) { return clamp((x - PAD) / (canvas.width - PAD * 2) * duration, 0, duration); }
+function visibleDuration() { return duration > 0 ? duration / tlZoom : duration; }
+function centerViewOnPlayhead() {
+  const vd = visibleDuration();
+  tlScrollT = clamp(vid.currentTime - vd / 2, 0, Math.max(0, duration - vd));
+}
+function t2x(t) {
+  const W = canvas.width;
+  const vd = visibleDuration();
+  return PAD + ((t - tlScrollT) / vd) * (W - PAD * 2);
+}
+function x2t(x) {
+  const W = canvas.width;
+  const vd = visibleDuration();
+  return clamp(tlScrollT + (x - PAD) / (W - PAD * 2) * vd, 0, duration);
+}
 
 function drawTimeline() {
   const W = canvasW();
-  if (canvas.width !== W || canvas.height !== CH) {
+  const scrollEl = document.getElementById('tl-scroll');
+  const containerH = Math.max(BASE_CH, scrollEl ? scrollEl.clientHeight : BASE_CH);
+  if (canvas.width !== W || canvas.height !== containerH) {
     canvas.width  = W;
-    canvas.height = CH;
+    canvas.height = containerH;
   }
-  ctx.clearRect(0, 0, W, CH);
+  const scale = containerH / BASE_CH;
+  const L = timelineLayout;
+  L.CH = containerH;
+  L.RH = Math.round(BASE_RH * scale);
+  L.TY = Math.round(BASE_TY * scale);
+  L.TH = Math.round(BASE_TH * scale);
+  L.WY = L.TY + L.TH + Math.round(BASE_WGP * scale);
+  L.WH = Math.round(BASE_WH * scale);
+  L.scale = scale;
+
+  ctx.clearRect(0, 0, W, L.CH);
   ctx.fillStyle = '#0f1117';
-  ctx.fillRect(0, 0, W, CH);
+  ctx.fillRect(0, 0, W, L.CH);
 
   if (!duration) {
     ctx.fillStyle = '#2e3245';
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Åpne en video for å aktivere tidslinjen', W / 2, CH / 2 + 5);
+    ctx.fillText('Open a video to enable the timeline', W / 2, L.CH / 2 + 5);
+    document.getElementById('tl-zoom-out').disabled = true;
+    document.getElementById('tl-zoom-in').disabled = true;
     return;
   }
 
-  // ── Ruler ticks
-  const rawInterval = duration / Math.max(1, Math.floor((W - PAD * 2) / 75));
+  const vd = visibleDuration();
+  if (vid.currentTime < tlScrollT || vid.currentTime > tlScrollT + vd - 0.001) {
+    centerViewOnPlayhead();
+  }
+
+  // ── Ruler ticks (visible range only)
+  const rawInterval = vd / Math.max(1, Math.floor((W - PAD * 2) / 75));
   const steps = [0.05,0.1,0.25,0.5,1,2,5,10,15,30,60,120,300,600];
   const interval = steps.find(s => s >= rawInterval) || 600;
+  const firstTick = Math.ceil(tlScrollT / interval) * interval;
   ctx.font = '9.5px monospace';
   ctx.textAlign = 'center';
-  for (let t = 0; t <= duration + 0.001; t += interval) {
+  for (let t = firstTick; t <= tlScrollT + vd + 0.001; t += interval) {
     const tt = Math.min(t, duration);
     const x  = t2x(tt);
+    if (x < PAD - 1 || x > W - PAD + 1) continue;
     ctx.strokeStyle = '#1e2540';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x, RH); ctx.lineTo(x, CH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, L.RH); ctx.lineTo(x, L.CH); ctx.stroke();
     ctx.fillStyle = '#525870';
-    ctx.fillText(fmtShort(tt), x, RH - 4);
-    if (tt === duration) break;
+    ctx.fillText(fmtShort(tt), x, L.RH - 4);
+    if (tt >= duration) break;
   }
 
   // ── Waveform
   if (waveformLoading) {
     ctx.fillStyle = '#252836';
-    ctx.fillRect(PAD, WY, W - PAD * 2, WH);
+    ctx.fillRect(PAD, L.WY, W - PAD * 2, L.WH);
     ctx.fillStyle = '#525870';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Laster bølgeform…', W / 2, WY + WH / 2 + 4);
+    ctx.fillText('Loading waveform…', W / 2, L.WY + L.WH / 2 + 4);
   } else if (waveformPeaks) {
     ctx.fillStyle = '#141824';
-    ctx.fillRect(PAD, WY, W - PAD * 2, WH);
+    ctx.fillRect(PAD, L.WY, W - PAD * 2, L.WH);
     const drawW    = W - PAD * 2;
-    const mid      = WY + WH / 2;
+    const mid      = L.WY + L.WH / 2;
     const numPeaks = waveformPeaks.length;
     for (let px = 0; px < drawW; px++) {
-      const t0 = (px / drawW) * duration;
-      const t1 = ((px + 1) / drawW) * duration;
+      const t0 = tlScrollT + (px / drawW) * vd;
+      const t1 = tlScrollT + ((px + 1) / drawW) * vd;
       const i0 = Math.floor((t0 / duration) * numPeaks);
       const i1 = Math.ceil((t1 / duration) * numPeaks);
       let peak = 0;
       for (let i = i0; i < i1 && i < numPeaks; i++) {
         if (waveformPeaks[i] > peak) peak = waveformPeaks[i];
       }
-      const barH = Math.max(1, peak * WH * 0.92);
-      const t    = (px / drawW) * duration;
+      const barH = Math.max(1, peak * L.WH * 0.92);
+      const t    = (t0 + t1) / 2;
       const isInActiveCue = activeCueIdx >= 0 &&
         t >= cues[activeCueIdx]?.start && t < cues[activeCueIdx]?.end;
       ctx.fillStyle = isInActiveCue ? '#6366f1' : '#1e3a5f';
@@ -965,23 +1432,23 @@ function drawTimeline() {
     }
     for (const c of cues) {
       ctx.fillStyle = 'rgba(99,102,241,0.12)';
-      ctx.fillRect(t2x(c.start), WY, t2x(c.end) - t2x(c.start), WH);
+      ctx.fillRect(t2x(c.start), L.WY, t2x(c.end) - t2x(c.start), L.WH);
     }
     ctx.strokeStyle = '#252836';
     ctx.lineWidth = 1;
-    ctx.strokeRect(PAD, WY, W - PAD * 2, WH);
+    ctx.strokeRect(PAD, L.WY, W - PAD * 2, L.WH);
   } else {
     ctx.fillStyle = '#141824';
-    ctx.fillRect(PAD, WY, W - PAD * 2, WH);
+    ctx.fillRect(PAD, L.WY, W - PAD * 2, L.WH);
     ctx.fillStyle = '#2e3245';
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Bølgeform lastes når du åpner en videofil', W / 2, WY + WH / 2 + 4);
+    ctx.fillText('Waveform loads when you open a video file', W / 2, L.WY + L.WH / 2 + 4);
   }
 
   // ── Cue track background
   ctx.fillStyle = '#13161f';
-  ctx.fillRect(PAD, TY, W - PAD * 2, TH);
+  ctx.fillRect(PAD, L.TY, W - PAD * 2, L.TH);
 
   // ── Cue blocks
   for (let i = 0; i < cues.length; i++) {
@@ -995,25 +1462,34 @@ function drawTimeline() {
     ctx.fillStyle   = dragging ? '#5b21b6' : active ? '#4338ca' : '#1e3a5f';
     ctx.strokeStyle = dragging ? '#a78bfa' : active ? '#818cf8' : '#2563eb';
     ctx.lineWidth   = 1.5;
-    rrect(x1, TY, bw, TH, 5);
+    rrect(x1, L.TY, bw, L.TH, Math.max(1, 5 * L.scale));
     ctx.fill();
     ctx.stroke();
 
     if (bw > 20) {
       ctx.save();
-      ctx.beginPath(); ctx.rect(x1 + 5, TY + 1, bw - 10, TH - 2); ctx.clip();
+      ctx.beginPath(); ctx.rect(x1 + 5, L.TY + 1, bw - 10, L.TH - 2); ctx.clip();
       ctx.fillStyle = active || dragging ? '#c7d2fe' : '#93c5fd';
       ctx.font = '11px -apple-system, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(c.text.replace(/\n/g, ' '), x1 + 7, TY + 16);
-      ctx.fillStyle = '#4b6080';
-      ctx.font = '9px monospace';
-      ctx.fillText(fmtShort(c.start), x1 + 6, TY + TH - 7);
+      ctx.fillText(c.text.replace(/\n/g, ' '), x1 + 7, L.TY + L.TH * 0.4);
+      ctx.fillStyle = active || dragging ? 'rgba(30,30,50,0.95)' : 'rgba(15,20,35,0.95)';
+      ctx.font = '10px monospace';
+      const tsY = L.TY + L.TH - 5 * L.scale;
+      if (bw > 100) {
+        ctx.textAlign = 'left';
+        ctx.fillText(fmtShort(c.start), x1 + 6, tsY);
+        ctx.textAlign = 'right';
+        ctx.fillText(fmtShort(c.end), x2 - 6, tsY);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillText(fmtShort(c.start), x1 + 6, tsY);
+      }
       ctx.restore();
     }
     if (bw > 16) {
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      const midY = TY + TH / 2, gH = 14;
+      const midY = L.TY + L.TH / 2, gH = 14 * L.scale;
       ctx.fillRect(x1 + 4, midY - gH/2, 2, gH);
       ctx.fillRect(x1 + 7, midY - gH/2, 2, gH);
       ctx.fillRect(x2 - 6, midY - gH/2, 2, gH);
@@ -1021,13 +1497,18 @@ function drawTimeline() {
     }
   }
 
+  // ── Left/right edge barriers on top (so zoomed cue blocks don’t overlap the margins)
+  ctx.fillStyle = '#0f1117';
+  ctx.fillRect(0, 0, PAD, L.CH);
+  ctx.fillRect(W - PAD, 0, PAD, L.CH);
+
   // ── Playhead
   const px = t2x(vid.currentTime);
   ctx.save();
   ctx.strokeStyle = '#ef4444';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, CH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, L.CH); ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = '#ef4444';
   ctx.beginPath();
@@ -1050,7 +1531,8 @@ function rrect(x, y, w, h, r) {
 //  TIMELINE  INTERACTION
 // ═══════════════════════════════════════════════════════
 function hitTest(x, y) {
-  if (y >= TY && y <= TY + TH) {
+  const L = timelineLayout;
+  if (y >= L.TY && y <= L.TY + L.TH) {
     for (let i = cues.length - 1; i >= 0; i--) {
       const x1 = t2x(cues[i].start);
       const x2 = t2x(cues[i].end);
@@ -1095,8 +1577,9 @@ canvas.addEventListener('mousemove', e => {
     const c    = cues[idx];
     const prev = idx > 0             ? cues[idx - 1] : null;
     const next = idx < cues.length-1 ? cues[idx + 1] : null;
-    const dt   = ((x - dragState.startX) / (canvas.width - PAD * 2)) * duration;
-    const snapT = SNAP_PX * duration / (canvas.width - PAD * 2);
+    const vd   = visibleDuration();
+    const dt   = ((x - dragState.startX) / (canvas.width - PAD * 2)) * vd;
+    const snapT = SNAP_PX * vd / (canvas.width - PAD * 2);
     const ph   = vid.currentTime;
 
     if (dragState.mode === 'move') {
@@ -1161,25 +1644,70 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 // ═══════════════════════════════════════════════════════
-//  SCROLL  TO  SCRUB
+//  SCROLL: HORIZONTAL = SEEK, VERTICAL = ZOOM
 // ═══════════════════════════════════════════════════════
 document.getElementById('tl-area').addEventListener('wheel', e => {
   e.preventDefault();
   if (!duration) return;
-  const delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-  const dt = (delta / (canvas.width - PAD * 2)) * duration * 0.4;
-  vid.currentTime = clamp(vid.currentTime + dt, 0, duration);
-  tick();
+  const W = canvas.width;
+  const drawW = W - PAD * 2;
+  const vd = visibleDuration();
+
+  if (e.deltaX !== 0) {
+    const dt = (e.deltaX / drawW) * vd * 0.4;
+    vid.currentTime = clamp(vid.currentTime + dt, 0, duration);
+    centerViewOnPlayhead();
+    tick();
+  }
+  if (e.deltaY !== 0) {
+    const r = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - r.left;
+    const tAtMouse = x2t(mouseX);
+    const factor = 1 - e.deltaY * 0.002;
+    tlZoom = clamp(tlZoom * factor, TL_ZOOM_MIN, TL_ZOOM_MAX);
+    const vdNew = visibleDuration();
+    tlScrollT = clamp(tAtMouse - ((mouseX - PAD) / drawW) * vdNew, 0, Math.max(0, duration - vdNew));
+    const zoomEl = document.getElementById('tl-zoom-label');
+    if (zoomEl) zoomEl.textContent = Math.round(tlZoom) + '×';
+    document.getElementById('tl-zoom-out').disabled = tlZoom <= TL_ZOOM_MIN;
+    document.getElementById('tl-zoom-in').disabled = tlZoom >= TL_ZOOM_MAX;
+    drawTimeline();
+  }
 }, { passive: false });
+
+function applyTimelineZoom(factor) {
+  if (!duration) return;
+  const tAtCenter = tlScrollT + visibleDuration() / 2;
+  tlZoom = clamp(tlZoom * factor, TL_ZOOM_MIN, TL_ZOOM_MAX);
+  const vd = visibleDuration();
+  tlScrollT = clamp(tAtCenter - vd / 2, 0, Math.max(0, duration - vd));
+  const zoomEl = document.getElementById('tl-zoom-label');
+  if (zoomEl) zoomEl.textContent = Math.round(tlZoom) + '×';
+  document.getElementById('tl-zoom-out').disabled = tlZoom <= TL_ZOOM_MIN;
+  document.getElementById('tl-zoom-in').disabled = tlZoom >= TL_ZOOM_MAX;
+  drawTimeline();
+}
+
+document.getElementById('tl-zoom-out').addEventListener('click', () => applyTimelineZoom(1 / 1.25));
+document.getElementById('tl-zoom-in').addEventListener('click', () => applyTimelineZoom(1.25));
+document.getElementById('tl-zoom-label').addEventListener('click', () => {
+  if (!duration) return;
+  tlZoom = 1;
+  tlScrollT = 0;
+  document.getElementById('tl-zoom-label').textContent = '1×';
+  document.getElementById('tl-zoom-out').disabled = true;
+  document.getElementById('tl-zoom-in').disabled = false;
+  drawTimeline();
+});
 
 // ═══════════════════════════════════════════════════════
 //  KEYBOARD
 // ═══════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
   const inInput = e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT';
-  if (e.code === 'Space'      && !inInput) { e.preventDefault(); togglePlay(); }
-  if (e.code === 'ArrowLeft'  && !inInput) { e.preventDefault(); stepFrame(-1); }
-  if (e.code === 'ArrowRight' && !inInput) { e.preventDefault(); stepFrame(1); }
+  if ((e.code === 'Space' || (e.key === 's' && !e.metaKey && !e.ctrlKey)) && !inInput) { e.preventDefault(); togglePlay(); }
+  if ((e.code === 'ArrowLeft'  || e.key === 'a') && !inInput) { e.preventDefault(); stepFrame(-1); }
+  if ((e.code === 'ArrowRight' || e.key === 'd') && !inInput) { e.preventDefault(); stepFrame(1); }
   if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveVTT(); }
 });
 
