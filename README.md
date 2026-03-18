@@ -6,17 +6,17 @@ A lightweight, browser-based editor for WebVTT subtitle files. Edit cues in sync
 
 - **Load and edit WebVTT** – Open a VTT file and edit cue text, start and end times
 - **Video preview** – Open a video file; playback stays in sync with the subtitle list
-- **Timeline** – Waveform, cue blocks, zoom (1×–100×), horizontal scroll; resizable timeline height
-- **Cue list** – Click a cue to seek; click start/end time to set via prompt; duplicate or delete cues
+- **Timeline** – Waveform, cue blocks, zoom (1×–100×), horizontal scroll; resizable timeline height; cue text wraps to multiple lines when the bar is tall
+- **Cue list** – Click a cue to seek; click start/end time (or the current time next to play) to set via prompt; duplicate or delete cues; list scrolls so the next cue stays visible below the active one
 - **Save** – Save button with state (Save / Saved / Saving…); **⌘S** (Ctrl+S) also saves
 - **Subtitle zoom** – Adjust preview font size (1–100%)
-- **Welcome modal** – Brief intro on first load (shortcuts and usage)
-
-**Coming:** Light mode (with optional toggle).
+- **Welcome modal** – Brief intro on first load (shortcuts and usage). Click the **VTT Editor** title anytime to show it again.
+- **Light / dark mode** – Follows system preference; toggle (☀/🌙) next to the title switches theme for the current session.
+- **Desktop only** – On narrow viewports (e.g. mobile), only a message is shown asking to open the page on a computer.
 
 ## Getting started
 
-Open `index.html` in your browser. No build step or server required.
+Open `index.html` in your browser. No build step or server required. Use a desktop browser; the editor is not intended for mobile.
 
 1. Open a **video** file and a **VTT** file (order doesn’t matter).
 2. Click a cue in the side panel to jump to that time; edit text and times as needed.

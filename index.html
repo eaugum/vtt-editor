@@ -20,6 +20,38 @@
       --red:      #ef4444;
       --green:    #10b981;
       --amber:    #f59e0b;
+      --btn-hover-bg:    #323650;
+      --btn-hover-border: #404668;
+      --card-hover-bg:   #1f2335;
+      --cue-active-bg:   rgba(99,102,241,0.09);
+      --modal-bg:        rgba(0,0,0,0.6);
+      --modal-close-hover: #323650;
+      --video-bg:        #000;
+      --sub-bg:          rgba(0,0,0,0.82);
+      --kbd-border:      #3e4460;
+    }
+    [data-theme="light"] {
+      --bg:       #f1f3f6;
+      --bg2:      #e8eaef;
+      --bg3:      #dde0e6;
+      --border:   #c5cad4;
+      --accent:   #6366f1;
+      --accent-h: #4f46e5;
+      --text:     #1a1d24;
+      --text2:    #4b5262;
+      --text3:    #6b7280;
+      --red:      #dc2626;
+      --green:    #059669;
+      --amber:    #d97706;
+      --btn-hover-bg:    #d1d5dc;
+      --btn-hover-border: #b4bac6;
+      --card-hover-bg:   #dde0e6;
+      --cue-active-bg:   rgba(99,102,241,0.12);
+      --modal-bg:        rgba(0,0,0,0.35);
+      --modal-close-hover: #d1d5dc;
+      --video-bg:        #000;
+      --sub-bg:          rgba(0,0,0,0.82);
+      --kbd-border:      #9ca3af;
     }
 
     body {
@@ -51,6 +83,20 @@
       cursor: pointer;
     }
     .app-title:hover { text-decoration: underline; }
+    .theme-toggle {
+      background: transparent;
+      border: none;
+      color: var(--text2);
+      padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .theme-toggle:hover { background: var(--btn-hover-bg); color: var(--text); }
+    .theme-toggle .theme-icon { font-size: 16px; line-height: 1; opacity: 0.65; transition: opacity 0.15s; }
+    [data-theme="light"] .theme-toggle .theme-icon { opacity: 1; }
     .sep { width: 1px; height: 18px; background: var(--border); }
     button {
       background: var(--bg3);
@@ -66,7 +112,7 @@
       white-space: nowrap;
       transition: background 0.12s, border-color 0.12s;
     }
-    button:hover:not(:disabled) { background: #323650; border-color: #404668; }
+    button:hover:not(:disabled) { background: var(--btn-hover-bg); border-color: var(--btn-hover-border); }
     button:disabled { opacity: 0.35; cursor: default; }
     button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     button.primary:hover:not(:disabled) { background: var(--accent-h); border-color: var(--accent-h); }
@@ -124,6 +170,7 @@
     #btn-save:focus:not(:focus-visible) { outline: none; }
     #btn-save.saved { background: var(--green); border-color: var(--green); color: #fff; }
     #btn-save.saved:hover:not(:disabled) { background: #0d9668; border-color: #0d9668; }
+    [data-theme="light"] #btn-save.saved:hover:not(:disabled) { background: #047857; border-color: #047857; }
     #btn-save.saving { background: var(--amber); border-color: var(--amber); color: #fff; }
     #btn-save.error { background: var(--red); border-color: var(--red); color: #fff; }
     #btn-save.error:hover:not(:disabled) { background: #dc2626; border-color: #dc2626; }
@@ -215,10 +262,10 @@
       transition: border-color 0.12s, background 0.12s;
       position: relative;
     }
-    .cue-card:hover { background: #1f2335; }
+    .cue-card:hover { background: var(--card-hover-bg); }
     .cue-card.active {
       border-color: var(--accent);
-      background: rgba(99,102,241,0.09);
+      background: var(--cue-active-bg);
     }
     .cue-card.active::before {
       content: '';
@@ -237,8 +284,20 @@
       cursor: pointer;
       padding: 1px 2px;
       border-radius: 3px;
+      border: 1px solid transparent;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
     }
-    .cue-ts .cue-ts-part:hover { background: var(--bg3); color: var(--text); }
+    .cue-ts .cue-ts-part:hover { background: var(--btn-hover-bg); color: var(--text); }
+    [data-theme="dark"] .cue-ts .cue-ts-part:hover {
+      background: rgba(99,102,241,0.22);
+      border-color: var(--accent-h);
+      color: var(--text);
+    }
+    [data-theme="light"] .cue-ts .cue-ts-part:hover {
+      background: rgba(99,102,241,0.18);
+      border-color: var(--accent);
+      color: var(--text);
+    }
     .cue-ta {
       width: 100%;
       background: transparent;
@@ -252,7 +311,7 @@
       overflow: hidden;
       display: block;
     }
-    .cue-card.active .cue-ta { color: #fff; }
+    .cue-card.active .cue-ta { color: var(--text); }
 
     /* Cue action buttons */
     .cue-actions {
@@ -279,14 +338,14 @@
       gap: 3px;
       transition: background 0.1s, color 0.1s, border-color 0.1s;
     }
-    .cue-btn:hover { background: var(--bg3); color: var(--text2); border-color: #404668; }
+    .cue-btn:hover { background: var(--bg3); color: var(--text2); border-color: var(--btn-hover-border); }
     .cue-btn.del:hover { background: rgba(239,68,68,0.15); color: var(--red); border-color: var(--red); }
 
     /* ── Right: video ────────────────────────────────────── */
     #right {
       display: flex;
       flex-direction: column;
-      background: #000;
+      background: var(--video-bg);
       overflow: hidden;
     }
     #video-wrap {
@@ -308,7 +367,7 @@
     }
     #sub-text {
       display: inline-block;
-      background: rgba(0,0,0,0.82);
+      background: var(--sub-bg);
       color: #fff;
       padding: 4px 13px;
       border-radius: 4px;
@@ -362,8 +421,20 @@
       cursor: pointer;
       padding: 2px 3px;
       border-radius: 3px;
+      border: 1px solid transparent;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
     }
-    #time-current:hover { background: var(--bg3); color: var(--text); }
+    #time-current:hover { background: var(--btn-hover-bg); color: var(--text); }
+    [data-theme="dark"] #time-current:hover {
+      background: rgba(99,102,241,0.22);
+      border-color: var(--accent-h);
+      color: var(--text);
+    }
+    [data-theme="light"] #time-current:hover {
+      background: rgba(99,102,241,0.18);
+      border-color: var(--accent);
+      color: var(--text);
+    }
     .font-scale-disp {
       font-size: 12px;
       color: var(--text2);
@@ -383,7 +454,7 @@
     }
     kbd {
       background: var(--bg3);
-      border: 1px solid #3e4460;
+      border: 1px solid var(--kbd-border);
       border-radius: 3px;
       padding: 1px 4px;
       font-size: 10px;
@@ -435,7 +506,7 @@
     #welcome-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: var(--modal-bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -486,8 +557,14 @@
       justify-content: center;
       padding: 0;
     }
-    #welcome-modal .modal-close:hover { background: #323650; color: var(--text); }
+    #welcome-modal .modal-close:hover { background: var(--modal-close-hover); color: var(--text); }
     #welcome-modal .modal-body { padding: 24px; }
+    #welcome-modal.mobile-only .modal-close { display: none; }
+    body.mobile-app #drop-overlay,
+    body.mobile-app #toolbar,
+    body.mobile-app #file-info-tooltip,
+    body.mobile-app #main,
+    body.mobile-app #tl-area { display: none !important; }
   </style>
 </head>
 <body>
@@ -495,12 +572,19 @@
 <div id="welcome-modal">
   <div class="modal-box" id="welcome-modal-box">
     <button type="button" class="modal-close" id="welcome-modal-close" aria-label="Close">×</button>
-    <div class="modal-body">
-      <h2>Welcome to VTT Editor</h2>
-      <p>This tool lets you edit WebVTT subtitle files in sync with a video.</p>
-      <p><strong>Get started:</strong> Open a video file and a VTT file using the toolbar buttons, or drag and drop them onto the page. You can also click the empty side panel to open a VTT file, or the timeline bar at the bottom to open a video.</p>
-      <p><strong>Editing:</strong> Click a cue in the list to jump to it. Edit text in place. Adjust start and end times by clicking the timecodes in the list, or drag the cue blocks on the timeline. Use the zoom controls to work precisely on long videos.</p>
-      <p><strong>Shortcuts:</strong> <kbd>Space</kbd> or <kbd>S</kbd> play/pause. <kbd>A</kbd>/<kbd>D</kbd> or arrow keys step frame by frame. <kbd>⌘S</kbd> saves.</p>
+    <div class="modal-body" id="welcome-modal-body">
+      <div class="welcome-desktop">
+        <h2>Welcome to VTT Editor</h2>
+        <p>This tool lets you edit WebVTT subtitle files in sync with a video.</p>
+        <p><strong>Get started:</strong> Open a video file and a VTT file using the toolbar buttons, or drag and drop them onto the page. You can also click the empty side panel to open a VTT file, or the timeline bar at the bottom to open a video.</p>
+        <p><strong>Editing:</strong> Click a cue in the list to jump to it. Edit text in place. Adjust start and end times by clicking the timecodes in the list, or drag the cue blocks on the timeline. Use the zoom controls to work precisely on long videos.</p>
+        <p><strong>Shortcuts:</strong> <kbd>Space</kbd> or <kbd>S</kbd> play/pause. <kbd>A</kbd>/<kbd>D</kbd> or arrow keys step frame by frame. <kbd>⌘S</kbd> saves.</p>
+        <p><strong>Tip:</strong> Theme follows your system; use the ☀/🌙 button to switch. Click the "VTT Editor" title anytime to show this message again.</p>
+      </div>
+      <div class="welcome-mobile" style="display: none;">
+        <h2>VTT Editor</h2>
+        <p>This editor is designed for desktop. Please open this page on a computer to edit subtitles.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -509,6 +593,7 @@
 
 <div id="toolbar">
   <span class="app-title" title="Show instructions">VTT Editor</span>
+  <button type="button" id="theme-toggle" class="theme-toggle" title="Toggle light/dark mode" aria-label="Toggle theme"><span id="theme-icon" class="theme-icon">☀</span></button>
   <div class="sep"></div>
   <button id="btn-vid">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -590,31 +675,95 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  WELCOME  MODAL
+//  THEME  (light / dark) — must be before STATE so drawTimeline can use timelinePalette
 // ═══════════════════════════════════════════════════════
-(function () {
-  const modal = document.getElementById('welcome-modal');
-  const box = document.getElementById('welcome-modal-box');
-  const closeBtn = document.getElementById('welcome-modal-close');
+const timelinePaletteDark = {
+  bg: '#0f1117', bg2: '#252836', bg3: '#13161f', ruler: '#1e2540', rulerText: '#525870',
+  waveformBg: '#141824', waveformLoading: '#252836', waveformBorder: '#252836',
+  cueBar: '#1e3a5f', cueBarActive: '#6366f1', cueOverlay: 'rgba(99,102,241,0.12)',
+  cueBlock: '#1e3a5f', cueBlockActive: '#4338ca', cueBlockDrag: '#5b21b6',
+  cueStroke: '#2563eb', cueStrokeActive: '#818cf8', cueStrokeDrag: '#a78bfa',
+  cueText: '#ffffff', cueTextActive: '#ffffff', cueTime: '#ffffff', cueTimeActive: '#ffffff',
+  cueGrip: 'rgba(255,255,255,0.35)', placeholder: '#2e3245', playhead: '#ef4444'
+};
+const timelinePaletteLight = {
+  bg: '#e8eaef', bg2: '#dde0e6', bg3: '#eef0f4', ruler: '#c5cad4', rulerText: '#6b7280',
+  waveformBg: '#d1d5dc', waveformLoading: '#dde0e6', waveformBorder: '#c5cad4',
+  cueBar: '#93b4c4', cueBarActive: '#6366f1', cueOverlay: 'rgba(99,102,241,0.15)',
+  cueBlock: '#94a3b8', cueBlockActive: '#4338ca', cueBlockDrag: '#5b21b6',
+  cueStroke: '#3b82f6', cueStrokeActive: '#6366f1', cueStrokeDrag: '#818cf8',
+  cueText: '#111827', cueTextActive: '#ffffff', cueTime: 'rgba(30,35,50,0.9)', cueTimeActive: '#ffffff',
+  cueGrip: 'rgba(0,0,0,0.25)', placeholder: '#9ca3af', playhead: '#dc2626'
+};
+let timelinePalette = timelinePaletteDark;
 
-  function openWelcome() {
-    modal.classList.remove('hidden');
+function getPreferredTheme() {
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+  return 'dark';
+}
+function applyTheme(theme, skipDraw) {
+  document.documentElement.setAttribute('data-theme', theme);
+  timelinePalette = theme === 'light' ? timelinePaletteLight : timelinePaletteDark;
+  var icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = theme === 'light' ? '☀' : '🌙';
+  if (!skipDraw && typeof drawTimeline === 'function') drawTimeline();
+}
+
+// Apply theme ASAP so the first timeline draw uses correct palette.
+// (Event handlers are still bound in runWhenReady.)
+applyTheme(getPreferredTheme(), true);
+
+function runWhenReady() {
+  // Follow system theme changes (no persistence).
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const onChange = (e) => applyTheme(e.matches ? 'light' : 'dark');
+    if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onChange);
+    else if (typeof mq.addListener === 'function') mq.addListener(onChange); // Safari
   }
-  function closeWelcome() {
-    modal.classList.add('hidden');
+
+  var themeToggleEl = document.getElementById('theme-toggle');
+  if (themeToggleEl) {
+    themeToggleEl.addEventListener('click', function () {
+      var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+    });
   }
-
-  const titleEl = document.querySelector('.app-title');
-  if (titleEl) titleEl.addEventListener('click', openWelcome);
-
-  closeBtn.addEventListener('click', closeWelcome);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeWelcome();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeWelcome();
-  });
-})();
+  var modal = document.getElementById('welcome-modal');
+  if (modal) {
+    var isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      document.body.classList.add('mobile-app');
+      modal.classList.add('mobile-only');
+      modal.classList.remove('hidden');
+      var desktopBlock = modal.querySelector('.welcome-desktop');
+      var mobileBlock = modal.querySelector('.welcome-mobile');
+      if (desktopBlock) desktopBlock.style.display = 'none';
+      if (mobileBlock) mobileBlock.style.display = '';
+    } else {
+      var closeBtn = document.getElementById('welcome-modal-close');
+      function closeWelcome() { modal.classList.add('hidden'); }
+      function openWelcome() { modal.classList.remove('hidden'); }
+      if (closeBtn) closeBtn.addEventListener('click', closeWelcome);
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeWelcome();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeWelcome();
+          e.preventDefault();
+        }
+      }, true);
+      var titleEl = document.querySelector('.app-title');
+      if (titleEl) titleEl.addEventListener('click', openWelcome);
+    }
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runWhenReady);
+} else {
+  runWhenReady();
+}
 
 // ═══════════════════════════════════════════════════════
 //  STATE
@@ -742,9 +891,11 @@ function fmtShort(sec) {
 function p2(n) { return String(n).padStart(2, '0'); }
 
 function parseVTT(text) {
+  if (!text || typeof text !== 'string') return [];
+  text = text.replace(/\uFEFF/g, '').replace(/\r\n/g, '\n');
   const out = [];
   let id = 0;
-  for (const block of text.replace(/\r\n/g, '\n').split(/\n{2,}/)) {
+  for (const block of text.split(/\n{2,}/)) {
     const lines = block.trim().split('\n');
     const ci = lines.findIndex(l => l.includes('-->'));
     if (ci === -1) continue;
@@ -824,11 +975,17 @@ document.getElementById('btn-save').addEventListener('click', () => saveVTT());
 async function openVTTFilePicker() {
   try {
     const [fh] = await showOpenFilePicker({
-      types: [{ description: 'WebVTT', accept: { 'text/vtt': ['.vtt'] } }]
+      types: [{
+        description: 'WebVTT',
+        accept: { 'text/vtt': ['.vtt'], 'text/plain': ['.vtt'] }
+      }],
+      excludeAcceptAllOption: false
     });
     await loadVTTFile(await fh.getFile(), fh, true);
     saveVTT();
-  } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+  } catch (e) {
+    if (e.name !== 'AbortError') console.error(e);
+  }
 }
 
 async function openVideoFilePicker() {
@@ -1299,10 +1456,27 @@ function updateActiveCue() {
   const newIdx = cues.findIndex(c => t >= c.start && t < c.end);
   if (newIdx === activeCueIdx) return;
   activeCueIdx = newIdx;
+  const container = document.getElementById('cue-list');
   document.querySelectorAll('.cue-card').forEach((el, i) => {
     const active = i === newIdx;
     el.classList.toggle('active', active);
-    if (active) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (active) {
+      const next = el.nextElementSibling;
+      if (next && container) {
+        // Scroll so the next card is visible below the active (unless active is last).
+        const nextBottom = next.offsetTop + next.offsetHeight;
+        const viewH = container.clientHeight;
+        const maxScroll = container.scrollHeight - viewH;
+        const targetTop = Math.min(
+          el.offsetTop,
+          Math.max(0, nextBottom - viewH)
+        );
+        const clamped = Math.max(0, Math.min(maxScroll, targetTop));
+        container.scrollTo({ top: clamped, behavior: 'smooth' });
+      } else {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
   });
 }
 
@@ -1374,12 +1548,13 @@ function drawTimeline() {
   L.WH = Math.round(BASE_WH * scale);
   L.scale = scale;
 
+  const P = timelinePalette;
   ctx.clearRect(0, 0, W, L.CH);
-  ctx.fillStyle = '#0f1117';
+  ctx.fillStyle = P.bg;
   ctx.fillRect(0, 0, W, L.CH);
 
   if (!duration) {
-    ctx.fillStyle = '#2e3245';
+    ctx.fillStyle = P.placeholder;
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Open a video to enable the timeline', W / 2, L.CH / 2 + 5);
@@ -1404,24 +1579,24 @@ function drawTimeline() {
     const tt = Math.min(t, duration);
     const x  = t2x(tt);
     if (x < PAD - 1 || x > W - PAD + 1) continue;
-    ctx.strokeStyle = '#1e2540';
+    ctx.strokeStyle = P.ruler;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x, L.RH); ctx.lineTo(x, L.CH); ctx.stroke();
-    ctx.fillStyle = '#525870';
+    ctx.fillStyle = P.rulerText;
     ctx.fillText(fmtShort(tt), x, L.RH - 4);
     if (tt >= duration) break;
   }
 
   // ── Waveform
   if (waveformLoading) {
-    ctx.fillStyle = '#252836';
+    ctx.fillStyle = P.waveformLoading;
     ctx.fillRect(PAD, L.WY, W - PAD * 2, L.WH);
-    ctx.fillStyle = '#525870';
+    ctx.fillStyle = P.rulerText;
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Loading waveform…', W / 2, L.WY + L.WH / 2 + 4);
   } else if (waveformPeaks) {
-    ctx.fillStyle = '#141824';
+    ctx.fillStyle = P.waveformBg;
     ctx.fillRect(PAD, L.WY, W - PAD * 2, L.WH);
     const drawW    = W - PAD * 2;
     const mid      = L.WY + L.WH / 2;
@@ -1439,27 +1614,27 @@ function drawTimeline() {
       const t    = (t0 + t1) / 2;
       const isInActiveCue = activeCueIdx >= 0 &&
         t >= cues[activeCueIdx]?.start && t < cues[activeCueIdx]?.end;
-      ctx.fillStyle = isInActiveCue ? '#6366f1' : '#1e3a5f';
+      ctx.fillStyle = isInActiveCue ? P.cueBarActive : P.cueBar;
       ctx.fillRect(PAD + px, mid - barH / 2, 1, barH);
     }
     for (const c of cues) {
-      ctx.fillStyle = 'rgba(99,102,241,0.12)';
+      ctx.fillStyle = P.cueOverlay;
       ctx.fillRect(t2x(c.start), L.WY, t2x(c.end) - t2x(c.start), L.WH);
     }
-    ctx.strokeStyle = '#252836';
+    ctx.strokeStyle = P.waveformBorder;
     ctx.lineWidth = 1;
     ctx.strokeRect(PAD, L.WY, W - PAD * 2, L.WH);
   } else {
-    ctx.fillStyle = '#141824';
+    ctx.fillStyle = P.waveformBg;
     ctx.fillRect(PAD, L.WY, W - PAD * 2, L.WH);
-    ctx.fillStyle = '#2e3245';
+    ctx.fillStyle = P.placeholder;
     ctx.font = '10px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Waveform loads when you open a video file', W / 2, L.WY + L.WH / 2 + 4);
   }
 
   // ── Cue track background
-  ctx.fillStyle = '#13161f';
+  ctx.fillStyle = P.bg3;
   ctx.fillRect(PAD, L.TY, W - PAD * 2, L.TH);
 
   // ── Cue blocks
@@ -1471,8 +1646,8 @@ function drawTimeline() {
     const dragging = dragState && dragState.idx === i;
     const active   = i === activeCueIdx;
 
-    ctx.fillStyle   = dragging ? '#5b21b6' : active ? '#4338ca' : '#1e3a5f';
-    ctx.strokeStyle = dragging ? '#a78bfa' : active ? '#818cf8' : '#2563eb';
+    ctx.fillStyle   = dragging ? P.cueBlockDrag : active ? P.cueBlockActive : P.cueBlock;
+    ctx.strokeStyle = dragging ? P.cueStrokeDrag : active ? P.cueStrokeActive : P.cueStroke;
     ctx.lineWidth   = 1.5;
     rrect(x1, L.TY, bw, L.TH, Math.max(1, 5 * L.scale));
     ctx.fill();
@@ -1480,27 +1655,54 @@ function drawTimeline() {
 
     if (bw > 20) {
       ctx.save();
-      ctx.beginPath(); ctx.rect(x1 + 5, L.TY + 1, bw - 10, L.TH - 2); ctx.clip();
-      ctx.fillStyle = active || dragging ? '#c7d2fe' : '#93c5fd';
+      // Keep horizontal padding constant (don't scale with height),
+      // otherwise large timeline heights will eat the available text width.
+      const padX = 12;
+      const clipW = Math.max(0, bw - padX * 2);
+      ctx.beginPath(); ctx.rect(x1 + padX, L.TY + 1, clipW, L.TH - 2); ctx.clip();
+      ctx.fillStyle = active || dragging ? P.cueTextActive : P.cueText;
       ctx.font = '11px -apple-system, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(c.text.replace(/\n/g, ' '), x1 + 7, L.TY + L.TH * 0.4);
-      ctx.fillStyle = active || dragging ? 'rgba(30,30,50,0.95)' : 'rgba(15,20,35,0.95)';
+      const rawText = c.text.replace(/\n/g, ' ').trim();
+      const textX = x1 + padX + 2;
+      const textMaxW = Math.max(0, clipW - 2);
+      const lineH = 13;
+      const topPadY = Math.max(6, Math.round(6 * L.scale));
+      const timeReserved = Math.max(14, Math.round(14 * L.scale));
+      const availH = Math.max(0, (L.TH - 2) - topPadY - timeReserved);
+      // Only allow multiple lines when there is clearly room (avoid 2 lines at min height).
+      const maxLines = availH >= 2 * lineH ? Math.floor(availH / lineH) : 1;
+      let y = L.TY + topPadY + 10; // baseline for first line
+      let rest = rawText;
+      for (let li = 0; li < maxLines && rest; li++) {
+        let line;
+        [line, rest] = wrapLine(ctx, rest, textMaxW);
+        if (!line) break;
+        if (li === maxLines - 1 && rest) {
+          // Ellipsis on last visible line if truncated.
+          while (line.length > 1 && ctx.measureText(line + '…').width > textMaxW) line = line.slice(0, -1);
+          line = line + '…';
+          rest = '';
+        }
+        ctx.fillText(line, textX, y);
+        y += lineH;
+      }
+      ctx.fillStyle = active || dragging ? P.cueTimeActive : P.cueTime;
       ctx.font = '10px monospace';
       const tsY = L.TY + L.TH - 5 * L.scale;
       if (bw > 100) {
         ctx.textAlign = 'left';
-        ctx.fillText(fmtShort(c.start), x1 + 6, tsY);
+        ctx.fillText(fmtShort(c.start), x1 + padX + 1, tsY);
         ctx.textAlign = 'right';
-        ctx.fillText(fmtShort(c.end), x2 - 6, tsY);
+        ctx.fillText(fmtShort(c.end), x2 - padX - 1, tsY);
       } else {
         ctx.textAlign = 'left';
-        ctx.fillText(fmtShort(c.start), x1 + 6, tsY);
+        ctx.fillText(fmtShort(c.start), x1 + padX + 1, tsY);
       }
       ctx.restore();
     }
     if (bw > 16) {
-      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillStyle = P.cueGrip;
       const midY = L.TY + L.TH / 2, gH = 14 * L.scale;
       ctx.fillRect(x1 + 4, midY - gH/2, 2, gH);
       ctx.fillRect(x1 + 7, midY - gH/2, 2, gH);
@@ -1510,19 +1712,19 @@ function drawTimeline() {
   }
 
   // ── Left/right edge barriers on top (so zoomed cue blocks don’t overlap the margins)
-  ctx.fillStyle = '#0f1117';
+  ctx.fillStyle = P.bg;
   ctx.fillRect(0, 0, PAD, L.CH);
   ctx.fillRect(W - PAD, 0, PAD, L.CH);
 
   // ── Playhead
   const px = t2x(vid.currentTime);
   ctx.save();
-  ctx.strokeStyle = '#ef4444';
+  ctx.strokeStyle = P.playhead;
   ctx.lineWidth = 1.5;
   ctx.setLineDash([3, 3]);
   ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, L.CH); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = '#ef4444';
+  ctx.fillStyle = P.playhead;
   ctx.beginPath();
   ctx.moveTo(px - 5, 0); ctx.lineTo(px + 5, 0); ctx.lineTo(px, 9);
   ctx.closePath(); ctx.fill();
@@ -1537,6 +1739,29 @@ function rrect(x, y, w, h, r) {
   ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
   ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
   ctx.closePath();
+}
+
+function wrapLine(ctx, text, maxWidth) {
+  // Returns [line, rest]
+  const t = text.trim();
+  if (!t) return ['', ''];
+  if (ctx.measureText(t).width <= maxWidth) return [t, ''];
+  const words = t.split(/\s+/);
+  let line = '';
+  let i = 0;
+  for (; i < words.length; i++) {
+    const next = line ? (line + ' ' + words[i]) : words[i];
+    if (ctx.measureText(next).width > maxWidth) break;
+    line = next;
+  }
+  if (!line) {
+    // Hard cut a single very long "word"
+    let cut = t;
+    while (cut.length > 1 && ctx.measureText(cut + '…').width > maxWidth) cut = cut.slice(0, -1);
+    return [cut + '…', ''];
+  }
+  const rest = words.slice(i).join(' ');
+  return [line, rest];
 }
 
 // ═══════════════════════════════════════════════════════
