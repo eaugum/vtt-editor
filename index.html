@@ -48,7 +48,9 @@
       color: var(--accent-h);
       letter-spacing: -0.3px;
       margin-right: 6px;
+      cursor: pointer;
     }
+    .app-title:hover { text-decoration: underline; }
     .sep { width: 1px; height: 18px; background: var(--border); }
     button {
       background: var(--bg3);
@@ -316,6 +318,10 @@
       max-width: 90%;
       transition: font-size 0.15s;
     }
+    #sub-text:empty {
+      background: transparent;
+      padding: 0;
+    }
     #vid-controls {
       background: var(--bg2);
       border-top: 1px solid var(--border);
@@ -502,7 +508,7 @@
 <div id="drop-overlay">Drop video or VTT file here</div>
 
 <div id="toolbar">
-  <span class="app-title">VTT Editor</span>
+  <span class="app-title" title="Show instructions">VTT Editor</span>
   <div class="sep"></div>
   <button id="btn-vid">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -591,9 +597,15 @@
   const box = document.getElementById('welcome-modal-box');
   const closeBtn = document.getElementById('welcome-modal-close');
 
+  function openWelcome() {
+    modal.classList.remove('hidden');
+  }
   function closeWelcome() {
     modal.classList.add('hidden');
   }
+
+  const titleEl = document.querySelector('.app-title');
+  if (titleEl) titleEl.addEventListener('click', openWelcome);
 
   closeBtn.addEventListener('click', closeWelcome);
   modal.addEventListener('click', (e) => {
