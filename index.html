@@ -400,23 +400,6 @@
     }
     .cue-card.search-match { border-color: var(--amber); }
     .cue-card.search-dim { opacity: 0.3; }
-    .search-snippet {
-      font-size: 12px;
-      color: var(--text2);
-      line-height: 1.45;
-      margin-bottom: 3px;
-      display: none;
-      word-break: break-word;
-    }
-    .search-snippet.visible { display: block; }
-    .search-snippet mark {
-      background: rgba(245,158,11,0.32);
-      color: var(--text);
-      border-radius: 2px;
-      padding: 0 1px;
-      font-weight: 600;
-    }
-
     /* ── Right: video ────────────────────────────────────── */
     #right {
       display: flex;
@@ -708,7 +691,7 @@
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </span>
-        <input type="search" id="search-input" class="search-input" placeholder="Search in subtitles" autocomplete="off" spellcheck="false">
+        <input type="text" id="search-input" class="search-input" placeholder="Search in subtitles" autocomplete="off" spellcheck="false">
         <button type="button" id="search-clear" class="search-clear" aria-label="Clear search">×</button>
       </div>
       <div id="search-msg"></div>
@@ -908,20 +891,6 @@ function updateSearchMsg() {
   else { el.textContent = n + (n === 1 ? ' match' : ' matches'); }
 }
 
-function highlightText(text, query) {
-  if (!query) return escapeHtml(text);
-  const q = query.toLowerCase();
-  let result = '';
-  let rest = text;
-  while (rest.length > 0) {
-    const idx = rest.toLowerCase().indexOf(q);
-    if (idx === -1) { result += escapeHtml(rest); break; }
-    result += escapeHtml(rest.slice(0, idx));
-    result += '<mark>' + escapeHtml(rest.slice(idx, idx + q.length)) + '</mark>';
-    rest = rest.slice(idx + q.length);
-  }
-  return result;
-}
 
 const vid    = document.getElementById('vid');
 const canvas = document.getElementById('tl-canvas');
@@ -1534,13 +1503,6 @@ function renderCueList() {
     ts.appendChild(document.createTextNode(' → '));
     ts.appendChild(endSpan);
 
-    // Search snippet with highlighted matches (shown only when searching and matched)
-    const snippet = document.createElement('div');
-    snippet.className = 'search-snippet' + (hasSearch && isMatch ? ' visible' : '');
-    if (hasSearch && isMatch) {
-      snippet.innerHTML = highlightText(cue.text, searchQuery);
-    }
-
     const ta = document.createElement('textarea');
     ta.className = 'cue-ta';
     ta.value = cue.text;
@@ -1556,12 +1518,8 @@ function renderCueList() {
         if (wasMatch !== nowMatch) {
           if (nowMatch) searchMatchSet.add(i); else searchMatchSet.delete(i);
           card.className = 'cue-card' + (nowMatch ? ' search-match' : ' search-dim');
-          snippet.className = 'search-snippet' + (nowMatch ? ' visible' : '');
-          if (nowMatch) snippet.innerHTML = highlightText(cue.text, searchQuery);
           updateSearchMsg();
           drawTimeline();
-        } else if (nowMatch) {
-          snippet.innerHTML = highlightText(cue.text, searchQuery);
         }
       }
     });
@@ -1591,7 +1549,7 @@ function renderCueList() {
     startSpan.addEventListener('click', e => { e.stopPropagation(); setCueTime(i, 'start'); });
     endSpan.addEventListener('click', e => { e.stopPropagation(); setCueTime(i, 'end'); });
     card.addEventListener('click', () => { vid.currentTime = cue.start; });
-    card.append(num, ts, snippet, ta, actions);
+    card.append(num, ts, ta, actions);
     container.appendChild(card);
   });
 }
