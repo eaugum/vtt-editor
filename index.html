@@ -1545,6 +1545,7 @@ function renderCueList() {
     snippet.addEventListener('click', e => {
       e.stopPropagation();
       card.classList.add('editing');
+      autoResizeTa(ta);
       ta.focus();
     });
 
