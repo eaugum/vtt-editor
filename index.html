@@ -355,6 +355,7 @@
     }
     .cue-btn:hover { background: var(--bg3); color: var(--text2); border-color: var(--btn-hover-border); }
     .cue-btn.del:hover { background: rgba(239,68,68,0.15); color: var(--red); border-color: var(--red); }
+    .cue-btn.merge:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 
     /* ── Search ─────────────────────────────────────────── */
     #search-row {
@@ -1632,6 +1633,20 @@ function renderCueList() {
     </svg> Duplicate`;
     dupBtn.addEventListener('click', e => { e.stopPropagation(); duplicateCue(i); });
 
+    const mergeBtn = document.createElement('button');
+    mergeBtn.className = 'cue-btn merge';
+    mergeBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="8 17 12 21 16 17"/><line x1="12" y1="3" x2="12" y2="21"/>
+    </svg> Merge down`;
+    const isLast = i >= cues.length - 1;
+    if (isLast) {
+      mergeBtn.disabled = true;
+      mergeBtn.title = 'No next cue to merge with';
+    } else {
+      mergeBtn.title = 'Merge with next cue';
+      mergeBtn.addEventListener('click', e => { e.stopPropagation(); mergeCueDown(i); });
+    }
+
     const delBtn = document.createElement('button');
     delBtn.className = 'cue-btn del';
     delBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1640,7 +1655,7 @@ function renderCueList() {
     </svg> Delete`;
     delBtn.addEventListener('click', e => { e.stopPropagation(); deleteCue(i); });
 
-    actions.append(dupBtn, delBtn);
+    actions.append(dupBtn, mergeBtn, delBtn);
 
     startSpan.addEventListener('click', e => { e.stopPropagation(); setCueTime(i, 'start'); });
     endSpan.addEventListener('click', e => { e.stopPropagation(); setCueTime(i, 'end'); });
@@ -1702,6 +1717,30 @@ function deleteCue(idx) {
   document.getElementById('cue-count').textContent = `${cues.length} cues`;
   refreshSaveButtonState();
   scheduleSave();
+}
+
+function mergeCueDown(idx) {
+  if (idx >= cues.length - 1) return;
+  const a = cues[idx];
+  const b = cues[idx + 1];
+  a.text = a.text + '\n' + b.text;
+  a.end = b.end;
+  cues.splice(idx + 1, 1);
+  if (activeCueIdx >= cues.length) activeCueIdx = cues.length - 1;
+  renderCueList();
+  drawTimeline();
+  document.getElementById('cue-count').textContent = `${cues.length} cues`;
+  refreshSaveButtonState();
+  scheduleSave();
+  requestAnimationFrame(() => {
+    const container = document.getElementById('cue-list');
+    const cards = container.querySelectorAll('.cue-card');
+    if (cards[idx]) {
+      cards[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      const ta = cards[idx].querySelector('.cue-ta');
+      if (ta) ta.focus();
+    }
+  });
 }
 
 function updateActiveCue() {
