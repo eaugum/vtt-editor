@@ -234,6 +234,20 @@
       color: var(--text3);
     }
     #cue-count { font-size: 11px; color: var(--text3); }
+    .add-cue-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text3);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .add-cue-btn:hover { background: var(--bg3); color: var(--text2); border-color: var(--btn-hover-border); }
     #cue-list {
       flex: 1;
       overflow-y: auto;
@@ -702,6 +716,10 @@
     <div id="left-hdr">
       <span class="lbl">Subtitles</span>
       <span id="cue-count"></span>
+      <button type="button" id="btn-add-cue" class="add-cue-btn" title="Add new cue in first available gap">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Cue
+      </button>
     </div>
     <div id="search-row">
       <div class="search-wrap">
@@ -1115,6 +1133,7 @@ document.getElementById('btn-vid').addEventListener('click', openVideoFilePicker
 
 document.getElementById('btn-vtt').addEventListener('click', openVTTFilePicker);
 document.getElementById('btn-save').addEventListener('click', () => saveVTT());
+document.getElementById('btn-add-cue').addEventListener('click', addCue);
 
 async function openVTTFilePicker() {
   try {
@@ -1606,6 +1625,49 @@ function renderCueList() {
     card.addEventListener('click', () => { vid.currentTime = cue.start; });
     card.append(num, ts, snippet, ta, actions);
     container.appendChild(card);
+  });
+}
+
+function addCue() {
+  const GAP = 5;
+  const maxEnd = duration > 0 ? duration : Infinity;
+
+  // Find the first 5-second gap in [0..duration] not overlapping any existing cue.
+  let start = 0;
+  const sorted = [...cues].sort((a, b) => a.start - b.start);
+
+  for (const c of sorted) {
+    if (c.start - start >= GAP) break;   // gap found before this cue
+    if (c.end > start) start = c.end;    // push past the end of this cue
+  }
+
+  // If we couldn't find a gap within duration, append after the last cue.
+  if (duration > 0 && start >= duration) {
+    const last = sorted[sorted.length - 1];
+    start = last ? last.end : 0;
+  }
+
+  const end = duration > 0 ? Math.min(start + GAP, duration) : start + GAP;
+
+  const newCue = { id: Date.now(), start, end, text: '' };
+  cues.push(newCue);
+  cues.sort((a, b) => a.start - b.start);
+
+  renderCueList();
+  drawTimeline();
+  document.getElementById('cue-count').textContent = `${cues.length} cues`;
+  scheduleSave();
+
+  // Scroll new cue into view and focus its textarea.
+  const newIdx = cues.indexOf(newCue);
+  requestAnimationFrame(() => {
+    const container = document.getElementById('cue-list');
+    const cards = container.querySelectorAll('.cue-card');
+    if (cards[newIdx]) {
+      cards[newIdx].scrollIntoView({ block: 'center', behavior: 'smooth' });
+      const ta = cards[newIdx].querySelector('.cue-ta');
+      if (ta) ta.focus();
+    }
   });
 }
 
