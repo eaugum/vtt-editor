@@ -904,6 +904,22 @@ let waveformLoading = false;
 let searchQuery = '';
 let searchMatchSet = new Set(); // indices of cues that match the current query
 
+function refreshSaveButtonState() {
+  // Save is available when we have loaded/synthetic subtitle content or an existing handle.
+  const canSave = cues.length > 0 || !!vttFileName || !!fileHandle;
+  document.getElementById('btn-save').disabled = !canSave;
+}
+
+function refreshAddCueButtonState() {
+  // Adding cues requires a loaded video (timeline timebase must exist).
+  const canAddCue = !!videoFileName && duration > 0;
+  const btn = document.getElementById('btn-add-cue');
+  btn.disabled = !canAddCue;
+  btn.title = canAddCue
+    ? 'Add new cue at playhead (1s)'
+    : 'Open a video first to add cues';
+}
+
 function getSearchMatches() {
   if (!searchQuery) return new Set();
   const q = searchQuery.toLowerCase();
@@ -1090,6 +1106,7 @@ async function loadVideoFile(file) {
     if (zi) zi.disabled = false;
     updateTimeDisp();
     updateSubtitleSize();
+    refreshAddCueButtonState();
     drawTimeline();
   }, { once: true });
   videoFileName = file.name;
@@ -1100,6 +1117,7 @@ async function loadVideoFile(file) {
   waveformLoading = true;
   drawTimeline();
   loadWaveform(file);
+  refreshAddCueButtonState();
 }
 
 async function loadVTTFile(file, handle = null, fromPicker = false) {
@@ -1118,7 +1136,7 @@ async function loadVTTFile(file, handle = null, fromPicker = false) {
   if (searchMsg) searchMsg.textContent = '';
   renderCueList();
   drawTimeline();
-  document.getElementById('btn-save').disabled = false;
+  refreshSaveButtonState();
   document.getElementById('cue-count').textContent = `${cues.length} cues`;
   setDot('saved');
   vttFileName = file.name;
@@ -1180,6 +1198,7 @@ async function saveVTT() {
       await w.write(serializeVTT(cues));
       await w.close();
       setDot('saved');
+      refreshSaveButtonState();
     } catch (e) { console.error(e); setDot('error'); }
 
   } else {
@@ -1208,6 +1227,7 @@ async function saveVTT() {
       await w.write(serializeVTT(cues));
       await w.close();
       setDot('saved');
+      refreshSaveButtonState();
     } catch (e) { console.error(e); setDot('error'); }
   }
 }
@@ -1629,25 +1649,11 @@ function renderCueList() {
 }
 
 function addCue() {
-  const GAP = 5;
-  const maxEnd = duration > 0 ? duration : Infinity;
+  if (!videoFileName || duration <= 0) return;
 
-  // Find the first 5-second gap in [0..duration] not overlapping any existing cue.
-  let start = 0;
-  const sorted = [...cues].sort((a, b) => a.start - b.start);
-
-  for (const c of sorted) {
-    if (c.start - start >= GAP) break;   // gap found before this cue
-    if (c.end > start) start = c.end;    // push past the end of this cue
-  }
-
-  // If we couldn't find a gap within duration, append after the last cue.
-  if (duration > 0 && start >= duration) {
-    const last = sorted[sorted.length - 1];
-    start = last ? last.end : 0;
-  }
-
-  const end = duration > 0 ? Math.min(start + GAP, duration) : start + GAP;
+  const CUE_DUR = 1;
+  const start = clamp(vid.currentTime, 0, duration);
+  const end = Math.min(start + CUE_DUR, duration);
 
   const newCue = { id: Date.now(), start, end, text: '' };
   cues.push(newCue);
@@ -1656,6 +1662,7 @@ function addCue() {
   renderCueList();
   drawTimeline();
   document.getElementById('cue-count').textContent = `${cues.length} cues`;
+  refreshSaveButtonState();
   scheduleSave();
 
   // Scroll new cue into view and focus its textarea.
@@ -1681,6 +1688,7 @@ function duplicateCue(idx) {
   renderCueList();
   drawTimeline();
   document.getElementById('cue-count').textContent = `${cues.length} cues`;
+  refreshSaveButtonState();
   scheduleSave();
 }
 
@@ -1690,6 +1698,7 @@ function deleteCue(idx) {
   renderCueList();
   drawTimeline();
   document.getElementById('cue-count').textContent = `${cues.length} cues`;
+  refreshSaveButtonState();
   scheduleSave();
 }
 
@@ -2065,13 +2074,8 @@ canvas.addEventListener('mousemove', e => {
     if (dragState.mode === 'move') {
       const dur = dragState.origEnd - dragState.origStart;
       let ns = dragState.origStart + dt;
-      if (prev) ns = Math.max(ns, prev.end);
-      if (next) ns = Math.min(ns, next.start - dur);
       ns = clamp(ns, 0, duration - dur);
       let ne = ns + dur;
-      // Snap to neighbours
-      if (prev && Math.abs(ns - prev.end) < snapT)   { ns = prev.end;   ne = ns + dur; }
-      if (next && Math.abs(ne - next.start) < snapT) { ne = next.start; ns = ne - dur; }
       // Snap to playhead (whichever end is closest)
       const dS = Math.abs(ns - ph), dE = Math.abs(ne - ph);
       if (dS < snapT && dS <= dE) { ns = ph; ne = ns + dur; }
@@ -2112,6 +2116,8 @@ canvas.addEventListener('mouseup', e => {
     if (movedPx < 4) {
       vid.currentTime = cues[dragState.idx].start;
     } else {
+      cues.sort((a, b) => a.start - b.start);
+      renderCueList();
       scheduleSave();
     }
     dragState = null;
@@ -2222,6 +2228,8 @@ document.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════════════════
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 window.addEventListener('resize', drawTimeline);
+refreshSaveButtonState();
+refreshAddCueButtonState();
 drawTimeline();
 </script>
 </body>
